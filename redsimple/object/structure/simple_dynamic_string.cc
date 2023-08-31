@@ -6,6 +6,7 @@
 
 namespace redisimple::object::structure {
 namespace {
+// TODO: read following number from config file
 int large_sds_size = 1024;
 int more_free_space = 1024;
 }  // namespace
@@ -88,11 +89,89 @@ void SimpleDynamicString::keep_in_range(int left, int right) {
 }
 
 void SimpleDynamicString::grow_zero_to(int target_length) {
-  
+  if (!buf_) {
+    len_ = target_length;
+    free_ = 0;
+    buf_ = new char[target_length + 1];
+    memset(buf_, '0', target_length);
+    buf_[target_length] = '\0';
+    return;
+  }
+  if (target_length <= len_) return;
+  if (target_length > len_ + free_) {
+    char* old_buf = buf_;
+    free_ = target_length < large_sds_size ? target_length : more_free_space;
+    buf_ = new char[target_length + free_ + 1];
+    memcpy(buf_, old_buf, len_);
+    delete[] old_buf;
+  } else {
+    free_ = free_ + len_ - target_length;
+  }
+  memset(buf_ + len_, '0', target_length - len_);
+  buf_[target_length] = '\0';
+  len_ = target_length;
+}
+// the target for trim is short, so just compare char in buf with target's
+void SimpleDynamicString::trim(const char* target) {
+  // cnt char of buf_ that is not in target
+  int cnt = 0, target_len = strlen(target);
+  for (int i = 0; i < len_; ++i) {
+    bool matched = false;
+    for (int j = 0; j < target_len; ++j) {
+      if (buf_[i] == target[j]) {
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) ++cnt;
+    if (cnt != i) buf_[cnt] = buf_[i];
+  }
+  free_ += len_ - cnt;
+  len_ = cnt;
+  buf_[len_] = '\0';
 }
 
-void trim(const char* str);
-
-void transform_to_string();
-
+// use kmp algorithm to match the pattern string
+void SimpleDynamicString::remove(const char* pattern) {
+  int pattern_len = strlen(pattern);
+  if (!buf_ || len_ < pattern_len) return;
+  int next[pattern_len];
+  next[0] = 0;
+  int front = 0, back = 1;
+  // calculate next array
+  while (back < pattern_len) {
+    if (pattern[front] == pattern[back]) {
+      ++front;
+      next[back] = front;
+      ++back;
+    } else if (front == 0) {
+      next[back] = 0;
+      ++back;
+    } else {
+      front = next[front - 1];
+    }
+  }
+  // try to match the substr from start_buf with pattern
+  int start_buf = 0, i = 0;
+  while (start_buf + pattern_len < len_) {
+    if (buf_[start_buf + i] == pattern[i]) {
+      ++i;
+      if (i == pattern_len) {
+        // remove the substr from start_buf
+        len_ -= pattern_len;
+        free_ += pattern_len;
+        while (start_buf < len_) {
+          buf_[start_buf] = buf_[start_buf + pattern_len];
+        }
+        buf_[len_] = '\0';
+        return;
+      }
+    } else if (i == 0) {
+      ++start_buf;
+    } else {
+      start_buf = start_buf + i - next[i];
+      i = next[i];
+    }
+  }
+}
 }  // namespace redisimple::object::structure

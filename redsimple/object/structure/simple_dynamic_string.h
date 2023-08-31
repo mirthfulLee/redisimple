@@ -1,10 +1,11 @@
 #ifndef REDISIMPLE_OBJECT_STRUCTURE_SIMPLE_DYNAMIC_STRING_H_
 #define REDISIMPLE_OBJECT_STRUCTURE_SIMPLE_DYNAMIC_STRING_H_
+#include "redisimple_data_structure.h"
 #include <memory>
 #include <cstring>
 namespace redisimple::object::structure {
 
-class SimpleDynamicString {
+class SimpleDynamicString : public RedisimpleDataStructure{
  public:
   SimpleDynamicString();
   SimpleDynamicString(const char* str);
@@ -25,8 +26,10 @@ class SimpleDynamicString {
   void keep_in_range(int left, int right);
   // expand to target_length with '0'
   void grow_zero_to(int target_length);
-  // remove target substr in SDS
-  void trim(const char* str);
+  // remove all char in SDS that also in target
+  void trim(const char* target);
+  // remove first substr that match the pattern in SDS
+  void remove(const char* pattern);
 
  private:
   // used bytes (not include the ending '\0')
