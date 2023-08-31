@@ -25,6 +25,7 @@ enum RedisimpleObjectEncoding {
 class RedisimpleObject {
  public:
   // 只占用4位
+  // TODO: retrive type and encoding by interface
   RedisimpleObjectType type_ : 4;
   RedisimpleObjectEncoding encoding_ : 4;
   std::shared_ptr<redisimple::object::structure::RedisimpleDataStructure> data_ptr;
