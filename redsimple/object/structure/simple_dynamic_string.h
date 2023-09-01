@@ -1,22 +1,24 @@
 #ifndef REDISIMPLE_OBJECT_STRUCTURE_SIMPLE_DYNAMIC_STRING_H_
 #define REDISIMPLE_OBJECT_STRUCTURE_SIMPLE_DYNAMIC_STRING_H_
-#include "redisimple_data_structure.h"
-#include <memory>
 #include <cstring>
+#include <memory>
+
+#include "redisimple_data_structure.h"
 namespace redisimple::object::structure {
 
-class SimpleDynamicString : public RedisimpleDataStructure{
+class SimpleDynamicString : public RedisimpleDataStructure {
  public:
   SimpleDynamicString();
+  // build SDS by copying data from str
   SimpleDynamicString(const char* str);
-  // 拷贝构造函数
-  SimpleDynamicString(const SimpleDynamicString &sds);
+  // copy constructor
+  SimpleDynamicString(const SimpleDynamicString& sds);
   SimpleDynamicString(int length);
   ~SimpleDynamicString();
   int length() { return len_; };
   int avail() { return free_; };
   void clear();
-  SimpleDynamicString* duplicate();
+  std::unique_ptr<RedisimpleDataStructure> duplicate();
   void copy(const char* str, int str_length);
   void catenate(const char* str, int str_length);
   void catenate(const SimpleDynamicString& sds);
@@ -30,6 +32,7 @@ class SimpleDynamicString : public RedisimpleDataStructure{
   void trim(const char* target);
   // remove first substr that match the pattern in SDS
   void remove(const char* pattern);
+  RedisimpleStructureType structure_type() { return REDISIMPLE_STRUCTURE_RAW; }
 
  private:
   // used bytes (not include the ending '\0')

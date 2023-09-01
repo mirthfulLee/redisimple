@@ -1,4 +1,7 @@
 #include "linked_list.h"
+
+#include <memory>
+
 #include "redisimple_data_structure.h"
 
 namespace redisimple::object::structure {
@@ -7,7 +10,7 @@ LinkedList::~LinkedList() {
   // delete all nodes
   LinkedListNode *cur = head_, *next = head_;
   while (cur != nullptr) {
-    next = cur->next();
+    next = cur->next_;
     delete[] cur;
     cur = next;
   }
@@ -38,7 +41,7 @@ int LinkedList::insert(int index,
     push_back(value);
     return 1;
   }
-  LinkedListNode* ptr = get_node(index);
+  LinkedListNode* ptr = index_node(index);
   ptr->prev_ = new LinkedListNode(value, ptr->prev_, ptr);
   ++len_;
   return 1;
@@ -47,7 +50,7 @@ void LinkedList::pop_back() {
   if (tail_) {
     LinkedListNode* old_tail = tail_;
     tail_ = tail_->prev_;
-    delete [] old_tail;
+    delete[] old_tail;
     --len_;
   }
 }
@@ -55,23 +58,98 @@ void LinkedList::pop_front() {
   if (head_) {
     LinkedListNode* old_head = head_;
     head_ = head_->next_;
-    delete [] old_head;
+    delete[] old_head;
     --len_;
   }
 }
 // remove the Node that containing the value matchs target
-void remove(std::unique_ptr<RedisimpleDataStructure>& target);
-void delete_node(int index);
+void LinkedList::remove(RedisimpleDataStructure* target) {
+  LinkedListNode* cur = head_;
+  while (cur != nullptr) {
+    if (cur->value_->compare(target) == 0) {
+      delete_node(cur);
+      return;
+    }
+    cur = cur->next_;
+  }
+}
+void LinkedList::remove(int index) { delete_node(index_node(index)); }
 // trim node not in range[start, stop]
-void trim(int start, int stop);
-void set(int index, std::unique_ptr<RedisimpleDataStructure>& value);
-std::unique_ptr<RedisimpleDataStructure>& index(int i);
+void LinkedList::trim(int start, int stop) {
+  if (start < 0) start = len_ + start;
+  if (stop < 0) stop = len_ + stop;
+  if (stop < start) return;
+  if (start >= len_) {
+    clear();
+    return;
+  }
+  // trim the part after stop
+  LinkedListNode* cur = tail_;
+  while (len_ > stop + 1) {
+    tail_ = cur->prev_;
+    delete[] cur;
+    cur = tail_;
+    --len_;
+  }
+  tail_->next_ = nullptr;
+  cur = head_;
+  while (len_ > stop - start + 1) {
+    head_ = cur->next_;
+    delete[] cur;
+    cur = head_;
+    --len_;
+  }
+  head_->prev_ = nullptr;
+}
+void LinkedList::clear() {
+  LinkedListNode *cur = head_, *tmp;
+  while (cur) {
+    tmp = cur->next_;
+    delete[] cur;
+    cur = tmp;
+  }
+  len_ = 0;
+  tail_ = head_ = nullptr;
+}
+// The node take over the value
+void LinkedList::set(int index,
+                     std::unique_ptr<RedisimpleDataStructure>& value) {
+  index_node(index)->value_.reset(value.release());
+}
+RedisimpleDataStructure* LinkedList::index(int i) {
+  return index_node(i)->value_.get();
+}
 // return the vector containing value ptrs of node in range
+// TODO: finish the function
 std::unique_ptr<std::vector<RedisimpleDataStructure*>>& range(int start,
                                                               int stop);
 // copy the entire linked list;
-LinkedList* duplicate();
-LinkedListNode* LinkedList::get_node(int index) {
+std::unique_ptr<RedisimpleDataStructure> LinkedList::duplicate() {
+  LinkedList* new_list = new LinkedList();
+  LinkedListNode* cur = head_;
+  while (cur != nullptr) {
+    std::unique_ptr<RedisimpleDataStructure> value = cur->value_->duplicate();
+    new_list->push_back(value);
+  }
+  return std::unique_ptr<RedisimpleDataStructure>(new_list);
+}
+// return 0 means the nodes of two list have same order and value;
+// otherwise return 1;
+int LinkedList::compare(RedisimpleDataStructure* obj) {
+  if (obj->structure_type() != REDISIMPLE_STRUCTURE_LINKEDLIST) return 1;
+  LinkedList* list = dynamic_cast<LinkedList*>(obj);
+  if (len_ != list->len_) return 1;
+  LinkedListNode *cur_a = head_, *cur_b = list->head_;
+  while (cur_a != nullptr) {
+    if (cur_a->compare(cur_b) != 0) {
+      return 1;
+    }
+    cur_a = cur_a->next_;
+    cur_b = cur_b->next_;
+  }
+  return 0;
+}
+LinkedListNode* LinkedList::index_node(int index) {
   if (len_ == 0 || index >= len_ || index < -len_) return nullptr;
   int cur_index;
   LinkedListNode* ptr;
@@ -93,5 +171,10 @@ LinkedListNode* LinkedList::get_node(int index) {
   }
   return ptr;
 }
-
+void LinkedList::delete_node(LinkedListNode* target) {
+  if (target->prev_) target->prev_->next_ = target->next_;
+  if (target->next_) target->next_->prev_ = target->prev_;
+  delete[] target;
+  --len_;
+}
 }  // namespace redisimple::object::structure

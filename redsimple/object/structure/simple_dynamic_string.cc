@@ -1,8 +1,10 @@
 #include "simple_dynamic_string.h"
+#include "redisimple_data_structure.h"
 
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 
 namespace redisimple::object::structure {
 namespace {
@@ -26,8 +28,8 @@ SimpleDynamicString::SimpleDynamicString(int length)
   buf_ = new char[free_ + 1];
 }
 SimpleDynamicString::~SimpleDynamicString() { delete[] buf_; }
-SimpleDynamicString* SimpleDynamicString::duplicate() {
-  return new SimpleDynamicString(*this);
+std::unique_ptr<RedisimpleDataStructure> SimpleDynamicString::duplicate() {
+  return std::unique_ptr<RedisimpleDataStructure> (new SimpleDynamicString(*this));
 }
 void SimpleDynamicString::copy(const char* str, int str_length) {
   if (str_length == 0) {
