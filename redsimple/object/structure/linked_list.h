@@ -47,19 +47,21 @@ class LinkedList : public RedisimpleDataStructure {
   void set(int index, std::unique_ptr<RedisimpleDataStructure>& value);
   RedisimpleDataStructure* index(int i);
   // return the vector containing value ptrs of node in range
-  std::unique_ptr<std::vector<RedisimpleDataStructure*>>& range(int start,
-                                                                int stop);
+  std::unique_ptr<std::vector<RedisimpleDataStructure*>> range(int start,
+                                                               int stop);
   // copy the entire linked list;
   std::unique_ptr<RedisimpleDataStructure> duplicate();
   int compare(RedisimpleDataStructure* obj);
-  RedisimpleStructureType structure_type() { return REDISIMPLE_STRUCTURE_LINKEDLIST; }
+  RedisimpleStructureType structure_type() {
+    return REDISIMPLE_STRUCTURE_LINKEDLIST;
+  }
 
  private:
   // head point to the first Node, tail point to the last Node
   LinkedListNode *head_, *tail_;
   int len_;
   // get the pointer of index node
-  // support index < 0 which means count from tail(-1) of the list 
+  // support index < 0 which means count from tail(-1) of the list
   LinkedListNode* index_node(int index);
   void delete_node(LinkedListNode* target);
 };

@@ -1,6 +1,7 @@
 #include "linked_list.h"
 
 #include <memory>
+#include <vector>
 
 #include "redisimple_data_structure.h"
 
@@ -119,11 +120,23 @@ void LinkedList::set(int index,
 RedisimpleDataStructure* LinkedList::index(int i) {
   return index_node(i)->value_.get();
 }
-// return the vector containing value ptrs of node in range
-// TODO: finish the function
-std::unique_ptr<std::vector<RedisimpleDataStructure*>>& range(int start,
-                                                              int stop);
-// copy the entire linked list;
+std::unique_ptr<std::vector<RedisimpleDataStructure*>> LinkedList::range(
+    int start, int stop) {
+  if (start < 0) start = len_ + start;
+  if (stop < 0) stop = len_ + stop;
+  if (stop < start || start >= len_) return nullptr;
+  if (stop >= len_) stop = len_ - 1;
+  std::vector<RedisimpleDataStructure*>* data_list =
+      new std::vector<RedisimpleDataStructure*>(stop - start + 1, nullptr);
+  LinkedListNode* cur = index_node(start);
+  int cnt = 0;
+  while (cnt < stop - start + 1) {
+    (*data_list)[cnt] = cur->value_.get();
+    ++cnt;
+    cur = cur->next_;
+  }
+  return std::unique_ptr<std::vector<RedisimpleDataStructure*>>(data_list);
+}
 std::unique_ptr<RedisimpleDataStructure> LinkedList::duplicate() {
   LinkedList* new_list = new LinkedList();
   LinkedListNode* cur = head_;
