@@ -15,7 +15,7 @@ class SimpleDynamicString : public RedisimpleDataStructure {
   SimpleDynamicString(const SimpleDynamicString& sds);
   SimpleDynamicString(int length);
   ~SimpleDynamicString();
-  int length() { return len_; };
+  int size() { return len_; };
   int avail() { return free_; };
   void clear();
   std::unique_ptr<RedisimpleDataStructure> duplicate();

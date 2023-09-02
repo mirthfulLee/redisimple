@@ -29,7 +29,7 @@ class LinkedListNode {
 class LinkedList : public RedisimpleDataStructure {
  public:
   ~LinkedList();
-  int length() { return len_; }
+  int size() { return len_; }
   LinkedListNode* head() { return head_; }
   LinkedListNode* tail() { return tail_; }
   void push_back(std::unique_ptr<RedisimpleDataStructure>& value);

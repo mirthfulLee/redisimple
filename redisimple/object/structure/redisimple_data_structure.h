@@ -21,6 +21,7 @@ class RedisimpleDataStructure {
   virtual int compare(RedisimpleDataStructure*);
   virtual RedisimpleStructureType structure_type();
   virtual std::unique_ptr<RedisimpleDataStructure> duplicate();
+  virtual int size();
 };
 }
 #endif // REDISIMPLE_OBJECT_STRUCTURE_REDISIMPLE_DATA_STRUCTURE_H_

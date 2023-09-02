@@ -7,7 +7,7 @@ namespace redisimple::object::structure {
 
 class Ziplist : public RedisimpleDataStructure {
  public:
-  int length();
+  int size();
   void push_back(std::unique_ptr<RedisimpleDataStructure>& value);
   void push_front(std::unique_ptr<RedisimpleDataStructure>& value);
   void insert(int index, std::unique_ptr<RedisimpleDataStructure>& value);
