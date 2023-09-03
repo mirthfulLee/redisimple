@@ -162,6 +162,13 @@ int LinkedList::compare(RedisimpleDataStructure* obj) {
   }
   return 0;
 }
+int LinkedList::hash() {
+  if (len_ == 0) return 0;
+  int hash_val = len_;
+  hash_val &= head_->value_->hash();
+  hash_val &= tail_->value_->hash();
+  return hash_val;
+}
 LinkedListNode* LinkedList::index_node(int index) {
   if (len_ == 0 || index >= len_ || index < -len_) return nullptr;
   int cur_index;

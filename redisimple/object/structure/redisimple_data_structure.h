@@ -9,7 +9,7 @@ enum RedisimpleStructureType {
   // Simple Dynamic String
   REDISIMPLE_STRUCTURE_RAW,
   // hash table
-  REDISIMPLE_STRUCTURE_HT,
+  REDISIMPLE_STRUCTURE_HASH,
   REDISIMPLE_STRUCTURE_LINKEDLIST,
   REDISIMPLE_STRUCTURE_ZIPLIST,
   REDISIMPLE_STRUCTURE_INTSET,
@@ -22,6 +22,7 @@ class RedisimpleDataStructure {
   virtual RedisimpleStructureType structure_type();
   virtual std::unique_ptr<RedisimpleDataStructure> duplicate();
   virtual int size();
+  virtual int hash();
 };
-}
-#endif // REDISIMPLE_OBJECT_STRUCTURE_REDISIMPLE_DATA_STRUCTURE_H_
+}  // namespace redisimple::object::structure
+#endif  // REDISIMPLE_OBJECT_STRUCTURE_REDISIMPLE_DATA_STRUCTURE_H_

@@ -1,5 +1,5 @@
-#ifndef REDISIMPLE_OBJECT_STRUCTURE_HASH_TABLE_H_
-#define REDISIMPLE_OBJECT_STRUCTURE_HASH_TABLE_H_
+#ifndef REDISIMPLE_OBJECT_STRUCTURE_HASH_MAP_H_
+#define REDISIMPLE_OBJECT_STRUCTURE_HASH_MAP_H_
 #include <cstddef>
 #include <cstring>
 #include <memory>
@@ -28,6 +28,7 @@ class HashTable {
                     std::unique_ptr<RedisimpleDataStructure>& value);
   TableEntry* get_random_pair();
   int delete_pair(std::unique_ptr<RedisimpleDataStructure>& key);
+  friend class HashMap;
 
  private:
   unsigned int entry_num_;
@@ -37,6 +38,7 @@ class HashTable {
   // since table size == 2^n;
   // size mask look like '000....0111111', which has n '1';
   unsigned int size_mask_;
+  // point to an array of TableEntry pointer
   std::unique_ptr<std::unique_ptr<TableEntry>[]> table_;
   unsigned int get_hash_slot(RedisimpleDataStructure* key);
   // get the last pointer of specific slot whose value is nullptr now;
@@ -47,23 +49,26 @@ class HashTable {
       RedisimpleDataStructure* target);
 };
 
-class Dict : public RedisimpleDataStructure {
+class HashMap : public RedisimpleDataStructure {
  public:
-  Dict();
-  Dict(int size);
+  HashMap();
+  HashMap(int size);
   void add_pair(std::unique_ptr<RedisimpleDataStructure>& key,
                 std::unique_ptr<RedisimpleDataStructure>& value);
-  // if the key is in dict, replace the value
-  // else add the pair to dict
+  // if the key is in map, replace the value
+  // else add the pair to map
   void replace_pair(std::unique_ptr<RedisimpleDataStructure>& key,
                     std::unique_ptr<RedisimpleDataStructure>& value);
   TableEntry* get_random_pair();
   int delete_pair(std::unique_ptr<RedisimpleDataStructure>& key);
   void clear();
-  // compare for Dict is not allowed
+  // compare for HashMap is not allowed
   int compare(RedisimpleDataStructure*) { return 1; }
-  RedisimpleStructureType structure_type() { return REDISIMPLE_STRUCTURE_HT; }
-  std::unique_ptr<RedisimpleDataStructure> duplicate();
+  RedisimpleStructureType structure_type() { return REDISIMPLE_STRUCTURE_HASH; }
+  // duplicate is not supported for HashMap
+  std::unique_ptr<RedisimpleDataStructure> duplicate() { return nullptr; }
+  // hash is not support for HashMap
+  int hash() { return 0; }
 
  private:
   std::unique_ptr<HashTable> hash_table_;
@@ -71,4 +76,4 @@ class Dict : public RedisimpleDataStructure {
   int rehash_index_;
 };
 }  // namespace redisimple::object::structure
-#endif  // REDISIMPLE_OBJECT_STRUCTURE_HASH_TABLE_H_
+#endif  // REDISIMPLE_OBJECT_STRUCTURE_HASH_MAP_H_

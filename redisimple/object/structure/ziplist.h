@@ -20,7 +20,8 @@ class Ziplist : public RedisimpleDataStructure {
   void trim(int start, int stop);
   void set(int index, std::unique_ptr<RedisimpleDataStructure>& value);
   // copy the entire linked list;
-  Ziplist* duplicate();
+  std::unique_ptr<RedisimpleDataStructure> duplicate();
+  int hash();
 
  private:
 

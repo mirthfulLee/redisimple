@@ -55,6 +55,7 @@ class LinkedList : public RedisimpleDataStructure {
   RedisimpleStructureType structure_type() {
     return REDISIMPLE_STRUCTURE_LINKEDLIST;
   }
+  int hash();
 
  private:
   // head point to the first Node, tail point to the last Node

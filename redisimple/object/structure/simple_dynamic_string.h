@@ -33,6 +33,7 @@ class SimpleDynamicString : public RedisimpleDataStructure {
   // remove first substr that match the pattern in SDS
   void remove(const char* pattern);
   RedisimpleStructureType structure_type() { return REDISIMPLE_STRUCTURE_RAW; }
+  int hash();
 
  private:
   // used bytes (not include the ending '\0')

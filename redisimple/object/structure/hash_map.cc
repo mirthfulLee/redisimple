@@ -1,4 +1,4 @@
-#include "dict.h"
+#include "hash_map.h"
 
 #include <memory>
 
@@ -7,57 +7,6 @@
 namespace redisimple::object::structure {
 // innominate namespace for hash algorithm
 namespace {
-// MurmurHash2, by Austin Appleby
-// Note - This code makes a few assumptions about how your machine behaves -
-// 1. We can read a 4-byte value from any address without crashing
-// 2. sizeof(int) == 4
-// And it has a few limitations -
-// 1. It will not work incrementally.
-// 2. It will not produce the same results on little-endian and big-endian
-//    machines.
-// code from: https://sites.google.com/site/murmurhash/
-unsigned int murmurhash(const void* key, int len, unsigned int seed) {
-  // 'm' and 'r' are mixing constants generated offline.
-  // They're not really 'magic', they just happen to work well.
-  const unsigned int m = 0x5bd1e995;
-  const int r = 24;
-  // Initialize the hash to a 'random' value
-  unsigned int h = seed ^ len;
-  // Mix 4 bytes at a time into the hash
-  const unsigned char* data = (const unsigned char*)key;
-  while (len >= 4) {
-    unsigned int k = *(unsigned int*)data;
-    k *= m;
-    k ^= k >> r;
-    k *= m;
-    h *= m;
-    h ^= k;
-    data += 4;
-    len -= 4;
-  }
-  // Handle the last few bytes of the input array
-  switch (len) {
-    case 3:
-      h ^= data[2] << 16;
-    case 2:
-      h ^= data[1] << 8;
-    case 1:
-      h ^= data[0];
-      h *= m;
-  };
-  // Do a few final mixes of the hash to ensure the last few
-  // bytes are well-incorporated.
-  h ^= h >> 13;
-  h *= m;
-  h ^= h >> 15;
-  return h;
-}
-
-// set random seed
-int random_seed = 0x27391764;
-// set hash algorithm
-unsigned int (*hash_function)(const void* key, int len,
-                              unsigned int seed) = murmurhash;
 }  // namespace
 
 HashTable::HashTable(int size)
@@ -67,7 +16,7 @@ HashTable::HashTable(int size)
 }
 
 unsigned int HashTable::get_hash_slot(RedisimpleDataStructure* key) {
-  return hash_function(key, key->size(), random_seed) & size_mask_;
+  return key->hash() & size_mask_;
 }
 
 std::unique_ptr<TableEntry>& HashTable::get_last_pointer(
@@ -120,19 +69,37 @@ void HashTable::replace_pair(std::unique_ptr<RedisimpleDataStructure>& key,
 }
 
 // TODO: how to get random number??
-TableEntry* HashTable::get_random_pair() {
-  return nullptr;
-}
+TableEntry* HashTable::get_random_pair() { return nullptr; }
 
 int HashTable::delete_pair(std::unique_ptr<RedisimpleDataStructure>& key) {
   std::unique_ptr<TableEntry>& target_entry =
       pointer_of_matched_entry(key.get());
   if (target_entry) {
-    if (target_entry->next_) target_entry.reset(target_entry->next_.release());
-    else target_entry = nullptr;
+    if (target_entry->next_)
+      target_entry.reset(target_entry->next_.release());
+    else
+      target_entry = nullptr;
     --entry_num_;
     return 1;
   }
   return 0;
 }
+HashMap::HashMap()
+    : hash_table_(new HashTable(4)), expand_table_(), rehash_index_(-1) {}
+HashMap::HashMap(int size)
+    : hash_table_(new HashTable(size)), expand_table_(), rehash_index_(-1) {}
+void HashMap::add_pair(std::unique_ptr<RedisimpleDataStructure>& key,
+                       std::unique_ptr<RedisimpleDataStructure>& value) {
+  if (rehash_index_ >= 0)
+    hash_table_->add_pair(key, value);
+  else
+    expand_table_->add_pair(key, value);
+}
+// if the key is in dict, replace the value
+// else add the pair to dict
+void HashMap::replace_pair(std::unique_ptr<RedisimpleDataStructure>& key,
+                           std::unique_ptr<RedisimpleDataStructure>& value) {}
+TableEntry* get_random_pair();
+int delete_pair(std::unique_ptr<RedisimpleDataStructure>& key);
+void clear();
 }  // namespace redisimple::object::structure

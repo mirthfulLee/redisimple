@@ -1,11 +1,13 @@
 #include "simple_dynamic_string.h"
-#include "redisimple_data_structure.h"
 
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include <memory>
 
+#include "redisimple/config.h"
+#include "redisimple/util/hash.h"
+#include "redisimple_data_structure.h"
 namespace redisimple::object::structure {
 namespace {
 // TODO: read following number from config file
@@ -29,7 +31,8 @@ SimpleDynamicString::SimpleDynamicString(int length)
 }
 SimpleDynamicString::~SimpleDynamicString() { delete[] buf_; }
 std::unique_ptr<RedisimpleDataStructure> SimpleDynamicString::duplicate() {
-  return std::unique_ptr<RedisimpleDataStructure> (new SimpleDynamicString(*this));
+  return std::unique_ptr<RedisimpleDataStructure>(
+      new SimpleDynamicString(*this));
 }
 void SimpleDynamicString::copy(const char* str, int str_length) {
   if (str_length == 0) {
@@ -175,5 +178,9 @@ void SimpleDynamicString::remove(const char* pattern) {
       i = next[i];
     }
   }
+}
+int SimpleDynamicString::hash() {
+  return redisimple::util::murmurhash2(
+      buf_, len_, redisimple::Config::get_instance()->random_seed);
 }
 }  // namespace redisimple::object::structure
