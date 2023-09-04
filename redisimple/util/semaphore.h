@@ -33,5 +33,27 @@ class Semaphore {
  private:
   sem_t sem_;
 };
+class ReaderWriterLocker {
+ public:
+  ReaderWriterLocker() : write_lock(), reader_cnt_lock(), reader_cnt(0) {}
+  int read() {
+    reader_cnt_lock.lock();
+    ++reader_cnt;
+    if (reader_cnt == 1) write_lock.lock();
+    reader_cnt_lock.unlock();
+  }
+  int done_read() {
+    reader_cnt_lock.lock();
+    --reader_cnt;
+    if (reader_cnt == 0) write_lock.unlock();
+    reader_cnt_lock.unlock();
+  }
+  int write() { write_lock.lock(); }
+  int done_write() { write_lock.unlock(); }
+
+ private:
+  Locker write_lock, reader_cnt_lock;
+  int reader_cnt;
+};
 }  // namespace redisimple::util
 #endif
