@@ -5,10 +5,13 @@ class Config {
  public:
   // should be exponent of 2;
   static unsigned int thread_num;
-  // random int
+  // random int used during hash;
   static unsigned int random_seed;
   // move <rehash_stride> bucket to new hash table each rash step;
   static unsigned int rehash_stride;
+  // the possibility for skiplist node to get higher level
+  static float skiplist_p;
+  static unsigned int skiplist_max_level;
   Config(Config &other) = delete;
   void operator=(Config &) = delete;
   static Config *get_instance() { return instance_; }
@@ -17,6 +20,8 @@ class Config {
     thread_num = 4;
     random_seed = 0x25871456;
     rehash_stride = 8;
+    skiplist_p = 0.25;
+    skiplist_max_level = 16;
   }
 
  private:
