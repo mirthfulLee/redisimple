@@ -12,6 +12,8 @@ class Config {
   // the possibility for skiplist node to get higher level
   static float skiplist_p;
   static unsigned int skiplist_max_level;
+  static int large_sds_size;
+  static int more_free_space;
   Config(Config &other) = delete;
   void operator=(Config &) = delete;
   static Config *get_instance() { return instance_; }
@@ -22,6 +24,8 @@ class Config {
     rehash_stride = 8;
     skiplist_p = 0.25;
     skiplist_max_level = 16;
+    large_sds_size = 1024;
+    more_free_space = 1024;
   }
 
  private:

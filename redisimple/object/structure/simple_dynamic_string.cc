@@ -8,12 +8,8 @@
 #include "redisimple/config.h"
 #include "redisimple/util/hash.h"
 #include "redisimple_data_structure.h"
+using redisimple::Config;
 namespace redisimple::object::structure {
-namespace {
-// TODO: read following number from config file
-int large_sds_size = 1024;
-int more_free_space = 1024;
-}  // namespace
 
 SimpleDynamicString::SimpleDynamicString() : len_(0), free_(0), buf_(nullptr){};
 
@@ -21,10 +17,12 @@ SimpleDynamicString::SimpleDynamicString(const char* str)
     : len_(0), free_(0), buf_(nullptr) {
   copy(str, strlen(str));
 }
+
 SimpleDynamicString::SimpleDynamicString(const SimpleDynamicString& sds)
     : len_(0), free_(0), buf_(nullptr) {
   copy(sds.buf_.get(), sds.len_);
 }
+
 SimpleDynamicString::SimpleDynamicString(int length)
     : len_(0), free_(length), buf_(nullptr) {
   buf_.reset(new char[free_ + 1]);
@@ -48,7 +46,8 @@ void SimpleDynamicString::copy(const char* str, int str_length) {
     if (buf_) {
       // If sds is not empty, this means this sds is inconstant,
       // so predistribute more memory to buf_ for future operations.
-      free_ = str_length < large_sds_size ? str_length : more_free_space;
+      free_ = str_length < Config::large_sds_size ? str_length
+                                                  : Config::more_free_space;
     } else {
       free_ = 0;
     }
@@ -57,6 +56,7 @@ void SimpleDynamicString::copy(const char* str, int str_length) {
   }
   strcpy(buf_.get(), str);
 }
+
 void SimpleDynamicString::catenate(const char* str, int str_length) {
   if (len_ == 0) {
     copy(str, str_length);
@@ -66,7 +66,7 @@ void SimpleDynamicString::catenate(const char* str, int str_length) {
   len_ += str_length;
   if (free_ < str_length) {
     // predistribute more memory to buf_ for future operations.
-    free_ = len_ < large_sds_size ? len_ : more_free_space;
+    free_ = len_ < Config::large_sds_size ? len_ : Config::more_free_space;
     std::unique_ptr<char[]> old_buf(buf_.release());
     buf_.reset(new char[len_ + free_ + 1]);
     strcpy(buf_.get(), old_buf.get());
@@ -75,13 +75,15 @@ void SimpleDynamicString::catenate(const char* str, int str_length) {
   }
   strcpy(&buf_[old_len], str);
 }
+
 void SimpleDynamicString::catenate(const SimpleDynamicString& sds) {
   catenate(sds.buf_.get(), sds.len_);
 }
 
 int SimpleDynamicString::compare(RDS* sds) {
   if (sds->structure_type() != REDISIMPLE_STRUCTURE_RAW) return 1;
-  return strcmp(buf_.get(), dynamic_cast<SimpleDynamicString*>(sds)->buf_.get());
+  return strcmp(buf_.get(),
+                dynamic_cast<SimpleDynamicString*>(sds)->buf_.get());
 }
 
 void SimpleDynamicString::keep_in_range(int left, int right) {
@@ -104,7 +106,8 @@ void SimpleDynamicString::grow_zero_to(int target_length) {
   if (target_length <= len_) return;
   if (target_length > len_ + free_) {
     std::unique_ptr<char[]> old_buf(buf_.release());
-    free_ = target_length < large_sds_size ? target_length : more_free_space;
+    free_ = target_length < Config::large_sds_size ? target_length
+                                                   : Config::more_free_space;
     buf_.reset(new char[target_length + free_ + 1]);
     memcpy(buf_.get(), old_buf.get(), len_);
   } else {
@@ -178,6 +181,7 @@ void SimpleDynamicString::remove(const char* pattern) {
     }
   }
 }
+
 int SimpleDynamicString::hash() {
   return redisimple::util::murmurhash2(
       buf_.get(), len_, redisimple::Config::get_instance()->random_seed);

@@ -1,6 +1,7 @@
 #ifndef REDISIMPLE_OBJECT_STRUCTURE_REDISIMPLE_DATA_STRUCTURE_H_
 #define REDISIMPLE_OBJECT_STRUCTURE_REDISIMPLE_DATA_STRUCTURE_H_
 #include <memory>
+
 namespace redisimple::object::structure {
 enum RedisimpleStructureType {
   REDISIMPLE_STRUCTURE_INT = 0,
@@ -15,14 +16,17 @@ enum RedisimpleStructureType {
   REDISIMPLE_STRUCTURE_INTSET,
   REDISIMPLE_STRUCTURE_SKIPLIST,
 };
+typedef RedisimpleStructureType RST;
+
 class RedisimpleDataStructure {
  public:
   virtual ~RedisimpleDataStructure() = 0;
-  virtual int compare(RedisimpleDataStructure*);
-  virtual RedisimpleStructureType structure_type();
-  virtual std::unique_ptr<RedisimpleDataStructure> duplicate();
-  virtual int size();
-  virtual int hash();
+  // only support compare for same data structure;
+  virtual int compare(RedisimpleDataStructure*) = 0;
+  virtual RST structure_type() = 0;
+  virtual std::unique_ptr<RedisimpleDataStructure> duplicate() = 0;
+  virtual int size() = 0;
+  virtual int hash() = 0;
 };
 typedef RedisimpleDataStructure RDS;
 }  // namespace redisimple::object::structure

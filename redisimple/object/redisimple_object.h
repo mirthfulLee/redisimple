@@ -3,7 +3,8 @@
 #include <memory>
 
 #include "structure/redisimple_data_structure.h"
-
+using redisimple::object::structure::RDS;
+using redisimple::object::structure::RST;
 namespace redisimple::object {
 enum RedisimpleObjectType {
   REDISIMPLE_OBJECT_STRING = 0,
@@ -12,23 +13,22 @@ enum RedisimpleObjectType {
   REDISIMPLE_OBJECT_SET,
   REDISIMPLE_OBJECT_ZSET
 };
-enum RedisimpleObjectEncoding {
-  REDISIMPLE_ENCODING_INT = 0,
-  REDISIMPLE_ENCODING_EMBSTR,
-  REDISIMPLE_ENCODING_RAW,
-  REDISIMPLE_ENCODING_HT,
-  REDISIMPLE_ENCODING_LINKEDLIST,
-  REDISIMPLE_ENCODING_ZIPLIST,
-  REDISIMPLE_ENCODING_INTSET,
-  REDISIMPLE_ENCODING_SKIPLIST,
-};
+typedef RedisimpleObjectType ROT;
 class RedisimpleObject {
  public:
-  // 只占用4位
-  // TODO: retrive type and encoding by interface
-  RedisimpleObjectType type_ : 4;
-  RedisimpleObjectEncoding encoding_ : 4;
-  std::shared_ptr<redisimple::object::structure::RedisimpleDataStructure> data_ptr;
+  virtual ~RedisimpleObject() = 0;
+  virtual ROT object_type() = 0;
+  virtual RST structure_type() { return data_->structure_type(); }
+  // only support compare for same object type;
+  // but the concrete data structure could be different;
+  virtual int compare(RedisimpleObject* ro) {
+    return data_->compare(ro->data_.get());
+  }
+  virtual int size() { return data_->size(); }
+  virtual int hash() { return data_->hash(); }
+  virtual char* serialize() = 0;
+  virtual void deserialize() = 0;
+  std::unique_ptr<RDS> data_;
 };
 }  // namespace redisimple::object
 #endif  // REDISIMPLE_OBJECT_REDISIMPLE_OBJECT_H_
