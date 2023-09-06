@@ -24,5 +24,6 @@ class RedisimpleDataStructure {
   virtual int size();
   virtual int hash();
 };
+typedef RedisimpleDataStructure RDS;
 }  // namespace redisimple::object::structure
 #endif  // REDISIMPLE_OBJECT_STRUCTURE_REDISIMPLE_DATA_STRUCTURE_H_

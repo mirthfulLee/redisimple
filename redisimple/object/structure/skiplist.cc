@@ -9,9 +9,6 @@ using redisimple::Config;
 using redisimple::util::murmurhash2;
 using redisimple::util::random_skiplist_node_level;
 namespace redisimple::object::structure {
-namespace {
-typedef RedisimpleDataStructure RDS;
-}  // namespace
 
 SkiplistNode::SkiplistNode()
     : score_(0), object_(nullptr), level_info_(nullptr) {}

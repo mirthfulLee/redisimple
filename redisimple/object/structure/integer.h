@@ -3,13 +3,13 @@
 
 #include "redisimple_data_structure.h"
 namespace redisimple::object::structure {
-class Integer : public RedisimpleDataStructure {
+class Integer : public RDS {
  public:
   Integer() : value_(0) {}
   Integer(int value) : value_(value) {}
-  int compare(RedisimpleDataStructure*);
+  int compare(RDS*);
   RedisimpleStructureType structure_type();
-  std::unique_ptr<RedisimpleDataStructure> duplicate();
+  std::unique_ptr<RDS> duplicate();
   int size();
   int hash();
 

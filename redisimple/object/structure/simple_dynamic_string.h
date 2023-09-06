@@ -6,7 +6,7 @@
 #include "redisimple_data_structure.h"
 namespace redisimple::object::structure {
 
-class SimpleDynamicString : public RedisimpleDataStructure {
+class SimpleDynamicString : public RDS {
  public:
   SimpleDynamicString();
   // build SDS by copying data from str
@@ -14,16 +14,15 @@ class SimpleDynamicString : public RedisimpleDataStructure {
   // copy constructor
   SimpleDynamicString(const SimpleDynamicString& sds);
   SimpleDynamicString(int length);
-  ~SimpleDynamicString();
   int size() { return len_; };
   int avail() { return free_; };
   void clear();
-  std::unique_ptr<RedisimpleDataStructure> duplicate();
+  std::unique_ptr<RDS> duplicate();
   void copy(const char* str, int str_length);
   void catenate(const char* str, int str_length);
   void catenate(const SimpleDynamicString& sds);
   // less -> -1; equal -> 0; larger -> 1;
-  int compare(const SimpleDynamicString& sds);
+  int compare(RDS* sds);
   // only keep the substr in range [left, right)
   void keep_in_range(int left, int right);
   // expand to target_length with '0'
@@ -40,7 +39,7 @@ class SimpleDynamicString : public RedisimpleDataStructure {
   int len_;
   // free bytes (also not include '\0')
   int free_;
-  char* buf_;
+  std::unique_ptr<char[]> buf_;
 };
 }  // namespace redisimple::object::structure
 #endif  // REDISIMPLE_OBJECT_STRUCTURE_SIMPLE_DYNAMIC_STRING_H_

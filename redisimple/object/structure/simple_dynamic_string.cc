@@ -23,17 +23,17 @@ SimpleDynamicString::SimpleDynamicString(const char* str)
 }
 SimpleDynamicString::SimpleDynamicString(const SimpleDynamicString& sds)
     : len_(0), free_(0), buf_(nullptr) {
-  copy(sds.buf_, sds.len_);
+  copy(sds.buf_.get(), sds.len_);
 }
 SimpleDynamicString::SimpleDynamicString(int length)
     : len_(0), free_(length), buf_(nullptr) {
-  buf_ = new char[free_ + 1];
+  buf_.reset(new char[free_ + 1]);
 }
-SimpleDynamicString::~SimpleDynamicString() { delete[] buf_; }
-std::unique_ptr<RedisimpleDataStructure> SimpleDynamicString::duplicate() {
-  return std::unique_ptr<RedisimpleDataStructure>(
-      new SimpleDynamicString(*this));
+
+std::unique_ptr<RDS> SimpleDynamicString::duplicate() {
+  return std::unique_ptr<RDS>(new SimpleDynamicString(*this));
 }
+
 void SimpleDynamicString::copy(const char* str, int str_length) {
   if (str_length == 0) {
     if (buf_) {
@@ -48,15 +48,14 @@ void SimpleDynamicString::copy(const char* str, int str_length) {
     if (buf_) {
       // If sds is not empty, this means this sds is inconstant,
       // so predistribute more memory to buf_ for future operations.
-      delete[] buf_;
       free_ = str_length < large_sds_size ? str_length : more_free_space;
     } else {
       free_ = 0;
     }
     len_ = str_length;
-    buf_ = new char[len_ + free_ + 1];
+    buf_.reset(new char[len_ + free_ + 1]);
   }
-  strcpy(buf_, str);
+  strcpy(buf_.get(), str);
 }
 void SimpleDynamicString::catenate(const char* str, int str_length) {
   if (len_ == 0) {
@@ -68,21 +67,21 @@ void SimpleDynamicString::catenate(const char* str, int str_length) {
   if (free_ < str_length) {
     // predistribute more memory to buf_ for future operations.
     free_ = len_ < large_sds_size ? len_ : more_free_space;
-    char* old_buf = buf_;
-    buf_ = new char[len_ + free_ + 1];
-    strcpy(buf_, old_buf);
-    delete[] old_buf;
+    std::unique_ptr<char[]> old_buf(buf_.release());
+    buf_.reset(new char[len_ + free_ + 1]);
+    strcpy(buf_.get(), old_buf.get());
   } else {
     free_ -= str_length;
   }
   strcpy(&buf_[old_len], str);
 }
 void SimpleDynamicString::catenate(const SimpleDynamicString& sds) {
-  catenate(sds.buf_, sds.len_);
+  catenate(sds.buf_.get(), sds.len_);
 }
 
-int SimpleDynamicString::compare(const SimpleDynamicString& sds) {
-  return strcmp(buf_, sds.buf_);
+int SimpleDynamicString::compare(RDS* sds) {
+  if (sds->structure_type() != REDISIMPLE_STRUCTURE_RAW) return 1;
+  return strcmp(buf_.get(), dynamic_cast<SimpleDynamicString*>(sds)->buf_.get());
 }
 
 void SimpleDynamicString::keep_in_range(int left, int right) {
@@ -97,25 +96,25 @@ void SimpleDynamicString::grow_zero_to(int target_length) {
   if (!buf_) {
     len_ = target_length;
     free_ = 0;
-    buf_ = new char[target_length + 1];
-    memset(buf_, '0', target_length);
+    buf_.reset(new char[target_length + 1]);
+    memset(buf_.get(), '0', target_length);
     buf_[target_length] = '\0';
     return;
   }
   if (target_length <= len_) return;
   if (target_length > len_ + free_) {
-    char* old_buf = buf_;
+    std::unique_ptr<char[]> old_buf(buf_.release());
     free_ = target_length < large_sds_size ? target_length : more_free_space;
-    buf_ = new char[target_length + free_ + 1];
-    memcpy(buf_, old_buf, len_);
-    delete[] old_buf;
+    buf_.reset(new char[target_length + free_ + 1]);
+    memcpy(buf_.get(), old_buf.get(), len_);
   } else {
     free_ = free_ + len_ - target_length;
   }
-  memset(buf_ + len_, '0', target_length - len_);
+  memset(buf_.get() + len_, '0', target_length - len_);
   buf_[target_length] = '\0';
   len_ = target_length;
 }
+
 // the target for trim is short, so just compare char in buf with target's
 void SimpleDynamicString::trim(const char* target) {
   // cnt char of buf_ that is not in target
@@ -181,6 +180,6 @@ void SimpleDynamicString::remove(const char* pattern) {
 }
 int SimpleDynamicString::hash() {
   return redisimple::util::murmurhash2(
-      buf_, len_, redisimple::Config::get_instance()->random_seed);
+      buf_.get(), len_, redisimple::Config::get_instance()->random_seed);
 }
 }  // namespace redisimple::object::structure

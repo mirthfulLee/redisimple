@@ -4,9 +4,6 @@
 
 #include "redisimple_data_structure.h"
 namespace redisimple::object::structure {
-namespace {
-typedef RedisimpleDataStructure RDS;
-}  // namespace
 class SkiplistNode {
  public:
   double score_;

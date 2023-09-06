@@ -18,8 +18,7 @@ HashTable::HashTable(int size)
   memset(table_.get(), 0, size);
 }
 
-std::unique_ptr<TableEntry>& HashTable::find(unsigned int bucket,
-                                             RedisimpleDataStructure* target) {
+std::unique_ptr<TableEntry>& HashTable::find(unsigned int bucket, RDS* target) {
   std::unique_ptr<TableEntry>* ptr = table_.get() + bucket;
   if (*ptr == nullptr) {
     return *ptr;
@@ -33,9 +32,8 @@ std::unique_ptr<TableEntry>& HashTable::find(unsigned int bucket,
   }
 }
 
-int HashTable::add_pair(unsigned int bucket,
-                        std::unique_ptr<RedisimpleDataStructure>& key,
-                        std::unique_ptr<RedisimpleDataStructure>& value) {
+int HashTable::add_pair(unsigned int bucket, std::unique_ptr<RDS>& key,
+                        std::unique_ptr<RDS>& value) {
   std::unique_ptr<TableEntry>& target_entry = find(bucket, key.get());
   if (target_entry == nullptr) {
     // target entry not exist, so add new entry
@@ -46,9 +44,8 @@ int HashTable::add_pair(unsigned int bucket,
   return 0;
 }
 
-int HashTable::replace_pair(unsigned int bucket,
-                            std::unique_ptr<RedisimpleDataStructure>& key,
-                            std::unique_ptr<RedisimpleDataStructure>& value) {
+int HashTable::replace_pair(unsigned int bucket, std::unique_ptr<RDS>& key,
+                            std::unique_ptr<RDS>& value) {
   std::unique_ptr<TableEntry>& target_entry = find(bucket, key.get());
   if (target_entry == nullptr) {
     // target entry not exist, so add new entry
@@ -73,8 +70,7 @@ TableEntry* HashTable::get_random_pair() {
   return result;
 }
 
-RedisimpleDataStructure* HashTable::get_value(unsigned int bucket,
-                                              RedisimpleDataStructure* key) {
+RDS* HashTable::get_value(unsigned int bucket, RDS* key) {
   std::unique_ptr<TableEntry>& target_entry = find(bucket, key);
   if (target_entry == nullptr)
     return nullptr;
@@ -82,7 +78,7 @@ RedisimpleDataStructure* HashTable::get_value(unsigned int bucket,
     return target_entry->value_.get();
 }
 
-int HashTable::delete_pair(unsigned int bucket, RedisimpleDataStructure* key) {
+int HashTable::delete_pair(unsigned int bucket, RDS* key) {
   std::unique_ptr<TableEntry>& target_entry = find(bucket, key);
   if (target_entry != nullptr) {
     if (target_entry->next_)
@@ -101,8 +97,7 @@ HashMap::HashMap()
 HashMap::HashMap(int size)
     : hash_table_(new HashTable(size)), expand_table_(), rehash_index_(-1) {}
 
-int HashMap::add_pair(std::unique_ptr<RedisimpleDataStructure>& key,
-                      std::unique_ptr<RedisimpleDataStructure>& value) {
+int HashMap::add_pair(std::unique_ptr<RDS>& key, std::unique_ptr<RDS>& value) {
   int hash_val = key->hash();
   int bucket = hash_val & hash_table_->size_mask_;
   HashTable* target_table;
@@ -118,8 +113,8 @@ int HashMap::add_pair(std::unique_ptr<RedisimpleDataStructure>& key,
 }
 // if the key is in dict, replace the value
 // else add the pair to dict
-int HashMap::replace_pair(std::unique_ptr<RedisimpleDataStructure>& key,
-                          std::unique_ptr<RedisimpleDataStructure>& value) {
+int HashMap::replace_pair(std::unique_ptr<RDS>& key,
+                          std::unique_ptr<RDS>& value) {
   int hash_val = key->hash();
   int bucket = hash_val & hash_table_->size_mask_;
   HashTable* target_table;
@@ -141,7 +136,7 @@ TableEntry* HashMap::get_random_pair() {
     return expand_table_->get_random_pair();
 }
 
-RedisimpleDataStructure* HashMap::get_value(RedisimpleDataStructure* key) {
+RDS* HashMap::get_value(RDS* key) {
   int hash_val = key->hash();
   int bucket = hash_val & hash_table_->size_mask_;
   HashTable* target_table;
@@ -155,7 +150,7 @@ RedisimpleDataStructure* HashMap::get_value(RedisimpleDataStructure* key) {
   return result;
 }
 
-int HashMap::delete_pair(RedisimpleDataStructure* key) {
+int HashMap::delete_pair(RDS* key) {
   int hash_val = key->hash();
   int bucket = hash_val & hash_table_->size_mask_;
   HashTable* target_table;
