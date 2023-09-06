@@ -11,6 +11,10 @@ Implement the basic function of redis with following feature:
 - efficient garbage collector implemented with modern smart pointers
 - organize the macro and const value with namespace
 
+## Architecture
+
+![architecture of redisimple](resource/redisimple.png)
+
 ## Good for CPP Learners
 
 As a cpp learner, it's difficult to find or start a project that is not only easy to understand, but also helps to solidify the cpp grammar and CS foundation.

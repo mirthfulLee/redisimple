@@ -24,7 +24,10 @@ When there is input in connection socket, this IO handler will be used to read, 
 
 1. read request.
 2. deserialize and resolve request.
-3. execute request if it's correct.
+3. execute request.
+    - validate the request format.
+    - check the permission of user.
+    - call the specific processor to execute the request.
 4. get result of execution.
 5. serialize the result and write to socket.
 
