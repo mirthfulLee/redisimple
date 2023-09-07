@@ -2,14 +2,16 @@
 #define REDISIMPLE_OBJECT_STRUCTURE_ZIPLIST_H_
 #include <memory>
 
+#include "redisimple/object/redisimple_object.h"
 #include "redisimple_data_structure.h"
 namespace redisimple::object::structure {
 class SkiplistNode {
  public:
   double score_;
-  std::unique_ptr<RDS> object_;
+  std::unique_ptr<RedisimpleObject> object_;
   SkiplistNode();
-  SkiplistNode(double score, std::unique_ptr<RDS>& object, unsigned int level);
+  SkiplistNode(double score, std::unique_ptr<RedisimpleObject>& object,
+               unsigned int level);
   friend class Skiplist;
 
  private:
@@ -33,9 +35,9 @@ class Skiplist : public RDS {
  public:
   Skiplist();
   ~Skiplist();
-  int insert_node(double score, std::unique_ptr<RDS>& object);
-  int delete_node(double score, std::unique_ptr<RDS>& object);
-  int get_rank(double score, std::unique_ptr<RDS>& object);
+  int insert_node(double score, std::unique_ptr<RedisimpleObject>& object);
+  int delete_node(double score, std::unique_ptr<RedisimpleObject>& object);
+  int get_rank(double score, std::unique_ptr<RedisimpleObject>& object);
   SkiplistNode* get_node_by_rank(int rank);
   // both low limit and high limit is not excluded
   int has_node_in_range(double low_limit, double high_limit);

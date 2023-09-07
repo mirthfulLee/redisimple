@@ -5,21 +5,21 @@
 #include "redisimple/config.h"
 #include "redisimple/util/hash.h"
 #include "redisimple/util/random.h"
-using redisimple::Config;
 using redisimple::util::murmurhash2;
 using redisimple::util::random_skiplist_node_level;
 namespace redisimple::object::structure {
 
 SkiplistNode::SkiplistNode()
     : score_(0), object_(nullptr), level_info_(nullptr) {}
-SkiplistNode::SkiplistNode(double score, std::unique_ptr<RDS>& object,
+SkiplistNode::SkiplistNode(double score,
+                           std::unique_ptr<RedisimpleObject>& object,
                            unsigned int level)
     : score_(score),
       object_(object.release()),
       level_info_(new SkiplistLevel[level]) {}
 
 Skiplist::Skiplist() : length_(0), level_(1), tail_(nullptr) {
-  std::unique_ptr<RDS> empty_head;
+  std::unique_ptr<RedisimpleObject> empty_head;
   head_.reset(new SkiplistNode(0, empty_head, Config::skiplist_max_level));
 }
 Skiplist::~Skiplist() {
@@ -30,7 +30,8 @@ Skiplist::~Skiplist() {
     delete[] tmp;
   }
 }
-int Skiplist::insert_node(double score, std::unique_ptr<RDS>& object) {
+int Skiplist::insert_node(double score,
+                          std::unique_ptr<RedisimpleObject>& object) {
   // the last node of each level whose rank is lower than new node
   // their span and forward will be updated after insertion
   SkiplistNode* update_nodes[Config::skiplist_max_level];
@@ -109,7 +110,8 @@ int Skiplist::delete_node(SkiplistNode* node, SkiplistNode** update_nodes) {
   return 1;
 }
 
-int Skiplist::delete_node(double score, std::unique_ptr<RDS>& object) {
+int Skiplist::delete_node(double score,
+                          std::unique_ptr<RedisimpleObject>& object) {
   SkiplistNode* update_nodes[Config::skiplist_max_level];
   SkiplistNode *cur = head_.get(), *next;
   unsigned int rank[Config::skiplist_max_level];
@@ -136,7 +138,8 @@ int Skiplist::delete_node(double score, std::unique_ptr<RDS>& object) {
   }
 }
 
-int Skiplist::get_rank(double score, std::unique_ptr<RDS>& object) {
+int Skiplist::get_rank(double score,
+                       std::unique_ptr<RedisimpleObject>& object) {
   SkiplistNode *cur = head_.get(), *next;
   int rank = 0;
   for (int i = level_ - 1; i >= 0; ++i) {
@@ -270,7 +273,7 @@ void Skiplist::clear() {
     ptr = ptr->level_info_.get()[0].forward_;
     delete[] tmp;
   }
-  std::unique_ptr<RDS> empty_head;
+  std::unique_ptr<RedisimpleObject> empty_head;
   head_.reset(new SkiplistNode(0, empty_head, Config::skiplist_max_level));
 }
 

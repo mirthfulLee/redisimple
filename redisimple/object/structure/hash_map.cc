@@ -7,9 +7,7 @@
 
 #include "redisimple/config.h"
 #include "redisimple/util/random.h"
-#include "redisimple_data_structure.h"
 
-using redisimple::Config;
 namespace redisimple::object::structure {
 
 HashTable::HashTable(int size)
@@ -18,7 +16,8 @@ HashTable::HashTable(int size)
   memset(table_.get(), 0, size);
 }
 
-std::unique_ptr<TableEntry>& HashTable::find(unsigned int bucket, RDS* target) {
+std::unique_ptr<TableEntry>& HashTable::find(unsigned int bucket,
+                                             RedisimpleObject* target) {
   std::unique_ptr<TableEntry>* ptr = table_.get() + bucket;
   if (*ptr == nullptr) {
     return *ptr;
@@ -32,8 +31,9 @@ std::unique_ptr<TableEntry>& HashTable::find(unsigned int bucket, RDS* target) {
   }
 }
 
-int HashTable::add_pair(unsigned int bucket, std::unique_ptr<RDS>& key,
-                        std::unique_ptr<RDS>& value) {
+int HashTable::add_pair(unsigned int bucket,
+                        std::unique_ptr<RedisimpleObject>& key,
+                        std::unique_ptr<RedisimpleObject>& value) {
   std::unique_ptr<TableEntry>& target_entry = find(bucket, key.get());
   if (target_entry == nullptr) {
     // target entry not exist, so add new entry
@@ -44,8 +44,9 @@ int HashTable::add_pair(unsigned int bucket, std::unique_ptr<RDS>& key,
   return 0;
 }
 
-int HashTable::replace_pair(unsigned int bucket, std::unique_ptr<RDS>& key,
-                            std::unique_ptr<RDS>& value) {
+int HashTable::replace_pair(unsigned int bucket,
+                            std::unique_ptr<RedisimpleObject>& key,
+                            std::unique_ptr<RedisimpleObject>& value) {
   std::unique_ptr<TableEntry>& target_entry = find(bucket, key.get());
   if (target_entry == nullptr) {
     // target entry not exist, so add new entry
@@ -70,7 +71,8 @@ TableEntry* HashTable::get_random_pair() {
   return result;
 }
 
-RDS* HashTable::get_value(unsigned int bucket, RDS* key) {
+RedisimpleObject* HashTable::get_value(unsigned int bucket,
+                                       RedisimpleObject* key) {
   std::unique_ptr<TableEntry>& target_entry = find(bucket, key);
   if (target_entry == nullptr)
     return nullptr;
@@ -78,7 +80,7 @@ RDS* HashTable::get_value(unsigned int bucket, RDS* key) {
     return target_entry->value_.get();
 }
 
-int HashTable::delete_pair(unsigned int bucket, RDS* key) {
+int HashTable::delete_pair(unsigned int bucket, RedisimpleObject* key) {
   std::unique_ptr<TableEntry>& target_entry = find(bucket, key);
   if (target_entry != nullptr) {
     if (target_entry->next_)
@@ -97,7 +99,8 @@ HashMap::HashMap()
 HashMap::HashMap(int size)
     : hash_table_(new HashTable(size)), expand_table_(), rehash_index_(-1) {}
 
-int HashMap::add_pair(std::unique_ptr<RDS>& key, std::unique_ptr<RDS>& value) {
+int HashMap::add_pair(std::unique_ptr<RedisimpleObject>& key,
+                      std::unique_ptr<RedisimpleObject>& value) {
   int hash_val = key->hash();
   int bucket = hash_val & hash_table_->size_mask_;
   HashTable* target_table;
@@ -113,8 +116,8 @@ int HashMap::add_pair(std::unique_ptr<RDS>& key, std::unique_ptr<RDS>& value) {
 }
 // if the key is in dict, replace the value
 // else add the pair to dict
-int HashMap::replace_pair(std::unique_ptr<RDS>& key,
-                          std::unique_ptr<RDS>& value) {
+int HashMap::replace_pair(std::unique_ptr<RedisimpleObject>& key,
+                          std::unique_ptr<RedisimpleObject>& value) {
   int hash_val = key->hash();
   int bucket = hash_val & hash_table_->size_mask_;
   HashTable* target_table;
@@ -136,7 +139,7 @@ TableEntry* HashMap::get_random_pair() {
     return expand_table_->get_random_pair();
 }
 
-RDS* HashMap::get_value(RDS* key) {
+RedisimpleObject* HashMap::get_value(RedisimpleObject* key) {
   int hash_val = key->hash();
   int bucket = hash_val & hash_table_->size_mask_;
   HashTable* target_table;
@@ -150,7 +153,7 @@ RDS* HashMap::get_value(RDS* key) {
   return result;
 }
 
-int HashMap::delete_pair(RDS* key) {
+int HashMap::delete_pair(RedisimpleObject* key) {
   int hash_val = key->hash();
   int bucket = hash_val & hash_table_->size_mask_;
   HashTable* target_table;

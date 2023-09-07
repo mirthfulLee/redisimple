@@ -16,17 +16,8 @@ class Config {
   static int more_free_space;
   Config(Config &other) = delete;
   void operator=(Config &) = delete;
-  static Config *get_instance() { return instance_; }
-  void load_config(char *config_file) {
-    instance_ = new Config();
-    thread_num = 4;
-    random_seed = 0x25871456;
-    rehash_stride = 8;
-    skiplist_p = 0.25;
-    skiplist_max_level = 16;
-    large_sds_size = 1024;
-    more_free_space = 1024;
-  }
+  static Config *get_instance();
+  static void load_config(char *config_file);
 
  private:
   static Config *instance_;

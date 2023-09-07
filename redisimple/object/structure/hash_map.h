@@ -1,34 +1,35 @@
 #ifndef REDISIMPLE_OBJECT_STRUCTURE_HASH_MAP_H_
 #define REDISIMPLE_OBJECT_STRUCTURE_HASH_MAP_H_
-#include <cstddef>
 #include <cstring>
 #include <memory>
 
+#include "redisimple/object/redisimple_object.h"
 #include "redisimple_data_structure.h"
 namespace redisimple::object::structure {
 class TableEntry {
  public:
   TableEntry() : key_(nullptr), value_(nullptr), next_(nullptr) {}
-  TableEntry(std::unique_ptr<RDS>& key, std::unique_ptr<RDS>& value);
+  TableEntry(std::unique_ptr<RedisimpleObject>& key,
+             std::unique_ptr<RedisimpleObject>& value);
   friend class HashTable;
   friend class HashMap;
 
  private:
-  std::unique_ptr<RDS> key_;
-  std::unique_ptr<RDS> value_;
+  std::unique_ptr<RedisimpleObject> key_;
+  std::unique_ptr<RedisimpleObject> value_;
   std::unique_ptr<TableEntry> next_;
 };
 
 class HashTable {
  public:
   HashTable(int size);
-  int add_pair(unsigned int bucket, std::unique_ptr<RDS>& key,
-               std::unique_ptr<RDS>& value);
-  int replace_pair(unsigned int bucket, std::unique_ptr<RDS>& key,
-                   std::unique_ptr<RDS>& value);
+  int add_pair(unsigned int bucket, std::unique_ptr<RedisimpleObject>& key,
+               std::unique_ptr<RedisimpleObject>& value);
+  int replace_pair(unsigned int bucket, std::unique_ptr<RedisimpleObject>& key,
+                   std::unique_ptr<RedisimpleObject>& value);
   TableEntry* get_random_pair();
-  RDS* get_value(unsigned int bucket, RDS* key);
-  int delete_pair(unsigned int bucket, RDS* key);
+  RedisimpleObject* get_value(unsigned int bucket, RedisimpleObject* key);
+  int delete_pair(unsigned int bucket, RedisimpleObject* key);
   friend class HashMap;
 
  private:
@@ -43,20 +44,23 @@ class HashTable {
   std::unique_ptr<std::unique_ptr<TableEntry>[]> table_;
   // return pointer to the entry whose key match the target;
   // if can not find target, return last pointer of slot.
-  std::unique_ptr<TableEntry>& find(unsigned int bucket, RDS* target);
+  std::unique_ptr<TableEntry>& find(unsigned int bucket,
+                                    RedisimpleObject* target);
 };
 
 class HashMap : public RDS {
  public:
   HashMap();
   HashMap(int size);
-  int add_pair(std::unique_ptr<RDS>& key, std::unique_ptr<RDS>& value);
+  int add_pair(std::unique_ptr<RedisimpleObject>& key,
+               std::unique_ptr<RedisimpleObject>& value);
   // if the key is in map, replace the value
   // else add the pair to map
-  int replace_pair(std::unique_ptr<RDS>& key, std::unique_ptr<RDS>& value);
+  int replace_pair(std::unique_ptr<RedisimpleObject>& key,
+                   std::unique_ptr<RedisimpleObject>& value);
   TableEntry* get_random_pair();
-  RDS* get_value(RDS* key);
-  int delete_pair(RDS* key);
+  RedisimpleObject* get_value(RedisimpleObject* key);
+  int delete_pair(RedisimpleObject* key);
   void clear();
   // compare for HashMap is not allowed
   int compare(RDS*) { return 1; }

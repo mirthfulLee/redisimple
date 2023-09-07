@@ -24,6 +24,7 @@ class RedisimpleObject {
   virtual int compare(RedisimpleObject* ro) {
     return data_->compare(ro->data_.get());
   }
+  virtual std::unique_ptr<RedisimpleObject> duplicate() = 0;
   virtual int size() { return data_->size(); }
   virtual int hash() { return data_->hash(); }
   virtual char* serialize() = 0;

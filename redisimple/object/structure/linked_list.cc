@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+#include "redisimple/object/redisimple_object.h"
 #include "redisimple_data_structure.h"
 
 namespace redisimple::object::structure {
@@ -16,21 +17,21 @@ LinkedList::~LinkedList() {
     cur = next;
   }
 }
-void LinkedList::push_back(std::unique_ptr<RDS>& value) {
+void LinkedList::push_back(std::unique_ptr<RedisimpleObject>& value) {
   LinkedListNode* new_node = new LinkedListNode(value);
   new_node->prev_ = tail_;
   if (tail_) tail_->next_ = new_node;
   tail_ = new_node;
   ++len_;
 }
-void LinkedList::push_front(std::unique_ptr<RDS>& value) {
+void LinkedList::push_front(std::unique_ptr<RedisimpleObject>& value) {
   LinkedListNode* new_node = new LinkedListNode(value);
   new_node->next_ = head_;
   if (head_) head_->prev_ = new_node;
   head_ = new_node;
   ++len_;
 }
-int LinkedList::insert(int index, std::unique_ptr<RDS>& value) {
+int LinkedList::insert(int index, std::unique_ptr<RedisimpleObject>& value) {
   // support index < 0 which is the reversed index from tail to head
   if (index < -len_ || index > len_) return 0;
   if (index == 0 || index == -len_) {
@@ -63,7 +64,7 @@ void LinkedList::pop_front() {
   }
 }
 // remove the Node that containing the value matchs target
-void LinkedList::remove(RDS* target) {
+void LinkedList::remove(RedisimpleObject* target) {
   LinkedListNode* cur = head_;
   while (cur != nullptr) {
     if (cur->value_->compare(target) == 0) {
@@ -112,17 +113,20 @@ void LinkedList::clear() {
   tail_ = head_ = nullptr;
 }
 // The node take over the value
-void LinkedList::set(int index, std::unique_ptr<RDS>& value) {
+void LinkedList::set(int index, std::unique_ptr<RedisimpleObject>& value) {
   index_node(index)->value_.reset(value.release());
 }
-RDS* LinkedList::index(int i) { return index_node(i)->value_.get(); }
-std::unique_ptr<std::vector<RDS*>> LinkedList::range(int start, int stop) {
+RedisimpleObject* LinkedList::index(int i) {
+  return index_node(i)->value_.get();
+}
+std::unique_ptr<std::vector<RedisimpleObject*>> LinkedList::range(int start,
+                                                                  int stop) {
   if (start < 0) start = len_ + start;
   if (stop < 0) stop = len_ + stop;
   if (stop < start || start >= len_) return nullptr;
   if (stop >= len_) stop = len_ - 1;
-  std::vector<RDS*>* data_list =
-      new std::vector<RDS*>(stop - start + 1, nullptr);
+  std::vector<RedisimpleObject*>* data_list =
+      new std::vector<RedisimpleObject*>(stop - start + 1, nullptr);
   LinkedListNode* cur = index_node(start);
   int cnt = 0;
   while (cnt < stop - start + 1) {
@@ -130,13 +134,13 @@ std::unique_ptr<std::vector<RDS*>> LinkedList::range(int start, int stop) {
     ++cnt;
     cur = cur->next_;
   }
-  return std::unique_ptr<std::vector<RDS*>>(data_list);
+  return std::unique_ptr<std::vector<RedisimpleObject*>>(data_list);
 }
 std::unique_ptr<RDS> LinkedList::duplicate() {
   LinkedList* new_list = new LinkedList();
   LinkedListNode* cur = head_;
   while (cur != nullptr) {
-    std::unique_ptr<RDS> value = cur->value_->duplicate();
+    std::unique_ptr<RedisimpleObject> value = cur->value_->duplicate();
     new_list->push_back(value);
   }
   return std::unique_ptr<RDS>(new_list);
