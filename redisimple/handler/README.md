@@ -22,12 +22,12 @@ When the listen socket get new connection, this handler will be used. It only ne
 
 When there is input in connection socket, this IO handler will be used to read, operate and return result to client. Its process includes:
 
-1. read request.
-2. deserialize and resolve request.
+1. read request from socket input buffer.
+2. resolve request string to argc and argv according to RESP.
 3. execute request.
-    - validate the request format.
     - check the permission of user.
-    - call the specific processor to execute the request.
+    - find the corresponding implementation of the request.
+    - call the specific processor to validate and execute the request.
 4. get result of execution.
 5. serialize the result and write to socket.
 

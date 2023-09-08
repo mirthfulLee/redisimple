@@ -4,11 +4,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <stack>
 
 #include "redisimple/config.h"
+#include "redisimple/object/redisimple_object.h"
 #include "redisimple/util/hash.h"
-#include "redisimple_data_structure.h"
-using redisimple::Config;
 namespace redisimple::object::structure {
 
 SimpleDynamicString::SimpleDynamicString() : len_(0), free_(0), buf_(nullptr){};
@@ -22,15 +22,69 @@ SimpleDynamicString::SimpleDynamicString(const SimpleDynamicString& sds)
     : len_(0), free_(0), buf_(nullptr) {
   copy(sds.buf_.get(), sds.len_);
 }
+SimpleDynamicString::SimpleDynamicString(std::unique_ptr<char[]>& str, int len,
+                                         int free)
+    : len_(len), free_(free), buf_(str.release()) {}
 
-SimpleDynamicString::SimpleDynamicString(int length)
-    : len_(0), free_(length), buf_(nullptr) {
-  buf_.reset(new char[free_ + 1]);
+SimpleDynamicString::SimpleDynamicString(int num, int free) : free_(free) {
+  std::unique_ptr<char[]> buf_(new char[free + 1]);
+  len_ = 0;
+  if (num < 0) {
+    buf_[0] = '-';
+    ++len_;
+  } else if (num == 0) {
+    buf_[0] = '0';
+    ++len_;
+  }
+  std::stack<int> stk;
+  while (num) {
+    stk.push(num % 10);
+    num /= 10;
+  }
+  while (!stk.empty() && len_ < free) {
+    buf_[len_] = '0' + stk.top();
+    stk.pop();
+    ++len_;
+  }
+  buf_[len_] = '\0';
+  free -= len_;
 }
 
-std::unique_ptr<RDS> SimpleDynamicString::duplicate() {
-  return std::unique_ptr<RDS>(new SimpleDynamicString(*this));
+RedisimpleStructureType SimpleDynamicString::structure_type() {
+  return REDISIMPLE_STRUCTURE_RAW;
 }
+
+int SimpleDynamicString::compare(RedisimpleObject* sds) {
+  if (sds->structure_type() != REDISIMPLE_STRUCTURE_RAW) return 1;
+  return strcmp(buf_.get(),
+                dynamic_cast<SimpleDynamicString*>(sds)->buf_.get());
+}
+
+std::unique_ptr<RedisimpleObject> SimpleDynamicString::duplicate() {
+  return std::unique_ptr<RedisimpleObject>(new SimpleDynamicString(*this));
+}
+
+int SimpleDynamicString::size() { return len_; };
+
+int SimpleDynamicString::hash() {
+  return redisimple::util::murmurhash2(
+      buf_.get(), len_, redisimple::Config::get_instance()->random_seed);
+}
+
+int SimpleDynamicString::serialize(char* out_buf, int& offset, int& cnt) {
+  strcpy(out_buf + offset, buf_.get());
+  offset += len_;
+  ++cnt;
+  return 0;
+}
+
+// take one
+int deserialize(char* argv[], int& offset, int& argc) {}
+
+int set(const char*);
+int append(const char*);
+int increase_by(const char*);
+int decrease_by(const char*);
 
 void SimpleDynamicString::copy(const char* str, int str_length) {
   if (str_length == 0) {
@@ -80,18 +134,15 @@ void SimpleDynamicString::catenate(const SimpleDynamicString& sds) {
   catenate(sds.buf_.get(), sds.len_);
 }
 
-int SimpleDynamicString::compare(RDS* sds) {
-  if (sds->structure_type() != REDISIMPLE_STRUCTURE_RAW) return 1;
-  return strcmp(buf_.get(),
-                dynamic_cast<SimpleDynamicString*>(sds)->buf_.get());
-}
-
 void SimpleDynamicString::keep_in_range(int left, int right) {
-  if (left > len_ || left < 0 || left >= right) return;
-  if (right > len_ + 1) right = len_ + 1;
-  for (int i = 0; i < right - left; ++i) buf_[i] = buf_[i + left];
-  buf_[right] = '\0';
-  len_ = right - left;
+  if (left < 0) left = len_ + left;
+  if (right < 0) right = len_ + right;
+  if (left > len_ || left > right) return;
+  if (right > len_) right = len_;
+  for (int i = 0; i <= right - left; ++i) buf_[i] = buf_[i + left];
+  buf_[right + 1] = '\0';
+  free_ += len_ - (right - left + 1);
+  len_ = right - left + 1;
 }
 
 void SimpleDynamicString::grow_zero_to(int target_length) {
@@ -182,8 +233,4 @@ void SimpleDynamicString::remove(const char* pattern) {
   }
 }
 
-int SimpleDynamicString::hash() {
-  return redisimple::util::murmurhash2(
-      buf_.get(), len_, redisimple::Config::get_instance()->random_seed);
-}
 }  // namespace redisimple::object::structure
