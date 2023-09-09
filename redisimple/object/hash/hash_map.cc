@@ -15,85 +15,110 @@ namespace redisimple::object::structure {
 
 HashTable::HashTable(int size)
     : entry_num_(0), table_size_(size), size_mask_(size - 1) {
-  table_.reset(new std::unique_ptr<TableEntry>[size]);
+  table_.reset(new TableEntry[size]);
   memset(table_.get(), 0, size);
-}
-
-std::unique_ptr<TableEntry>& HashTable::find(unsigned int bucket,
-                                             RedisimpleObject* target) {
-  std::unique_ptr<TableEntry>* ptr = table_.get() + bucket;
-  if (*ptr == nullptr) {
-    return *ptr;
-  } else {
-    // loop until ptr points to the matched entry or nullptr;
-    while (ptr->get()->next_ &&
-           target->compare(ptr->get()->next_->value_.get()) != 0) {
-      ptr = &(ptr->get()->next_);
-    }
-    return ptr->get()->next_;
-  }
 }
 
 int HashTable::add_pair(unsigned int bucket,
                         std::unique_ptr<RedisimpleObject>& key,
                         std::unique_ptr<RedisimpleObject>& value) {
-  std::unique_ptr<TableEntry>& target_entry = find(bucket, key.get());
-  if (target_entry == nullptr) {
-    // target entry not exist, so add new entry
-    target_entry.reset(new TableEntry(key, value));
+  if (table_[bucket].key_ == nullptr) {
+    table_[bucket].key_.reset(key.release());
+    table_[bucket].value_.reset(value.release());
+    ++entry_num_;
+    return 1;
+  } else {
+    TableEntry* ptr = &(table_[bucket]);
+    // loop until ptr points to the matched entry or nullptr;
+    while (ptr->next_) {
+      if (key->compare(ptr->key_.get()) == 0) return 0;
+      ptr = ptr->next_.get();
+    }
+    ptr->next_.reset(new TableEntry(key, value));
     ++entry_num_;
     return 1;
   }
-  return 0;
 }
 
 int HashTable::replace_pair(unsigned int bucket,
                             std::unique_ptr<RedisimpleObject>& key,
                             std::unique_ptr<RedisimpleObject>& value) {
-  std::unique_ptr<TableEntry>& target_entry = find(bucket, key.get());
-  if (target_entry == nullptr) {
-    // target entry not exist, so add new entry
-    target_entry.reset(new TableEntry(key, value));
+  if (table_[bucket].key_ == nullptr) {
+    table_[bucket].key_.reset(key.release());
+    table_[bucket].value_.reset(value.release());
     ++entry_num_;
     return 1;
   } else {
-    // move the ownership to target entry
-    target_entry->value_.reset(value.release());
-    return 0;
+    TableEntry* ptr = &(table_[bucket]);
+    // loop until ptr points to the matched entry or nullptr;
+    while (ptr->next_) {
+      if (key->compare(ptr->key_.get()) == 0) {
+        ptr->value_.reset(value.release());
+        return 0;
+      }
+      ptr = ptr->next_.get();
+    }
+    ptr->next_.reset(new TableEntry(key, value));
+    ++entry_num_;
+    return 1;
   }
-}
-
-// TODO: how to get random number??
-TableEntry* HashTable::get_random_pair() {
-  unsigned int bucket = redisimple::util::randint() & size_mask_;
-  TableEntry* result = nullptr;
-  while (result == nullptr) {
-    result = (table_.get() + bucket)->get();
-    bucket += redisimple::util::randint() & size_mask_;
-  }
-  return result;
 }
 
 RedisimpleObject* HashTable::get_value(unsigned int bucket,
                                        RedisimpleObject* key) {
-  std::unique_ptr<TableEntry>& target_entry = find(bucket, key);
-  if (target_entry == nullptr)
+  if (table_[bucket].key_ == nullptr) {
     return nullptr;
-  else
-    return target_entry->value_.get();
+  } else {
+    TableEntry* ptr = &(table_[bucket]);
+    // loop until ptr points to the matched entry or nullptr;
+    while (ptr->next_) {
+      if (key->compare(ptr->key_.get()) == 0) {
+        return ptr->value_.get();
+      }
+      ptr = ptr->next_.get();
+    }
+    return nullptr;
+  }
 }
 
 int HashTable::delete_pair(unsigned int bucket, RedisimpleObject* key) {
-  std::unique_ptr<TableEntry>& target_entry = find(bucket, key);
-  if (target_entry != nullptr) {
-    if (target_entry->next_)
-      target_entry.reset(target_entry->next_.release());
-    else
-      target_entry = nullptr;
+  if (table_[bucket].key_->compare(key) == 0) {
+    // delete the first entry
+    if (table_[bucket].next_ != nullptr) {
+      table_[bucket].key_.reset(table_[bucket].next_->key_.release());
+      table_[bucket].value_.reset(table_[bucket].next_->value_.release());
+      table_[bucket].next_.reset(table_[bucket].next_->next_.release());
+    } else {
+      table_[bucket].key_ = nullptr;
+      table_[bucket].value_ = nullptr;
+    }
     --entry_num_;
-    return -1;
+    return 1;
+  }
+  TableEntry* ptr = &(table_[bucket]);
+  while (ptr->next_ != nullptr) {
+    if (ptr->next_->key_->compare(key) == 0) {
+      ptr->next_.reset(ptr->next_->next_.release());
+      --entry_num_;
+      return 1;
+    }
+    ptr = ptr->next_.get();
   }
   return 0;
+}
+
+void HashTable::add_without_check(int bucket,
+                                  std::unique_ptr<TableEntry>& entry) {
+  // if the bucket is empty, take the entry as the first one
+  // otherwise, the entry will be added as the second entry in bucket
+  TableEntry* head = &(table_[bucket]);
+  if (head->key_ == nullptr) {
+    head->key_.reset(entry->key_.release());
+    head->value_.reset(entry->value_.release());
+  } else {
+    entry->next_.reset(head->next_.release());
+    head->next_.reset(entry.release());
+  }
 }
 
 HashMap::HashMap()
@@ -132,7 +157,7 @@ RedisimpleObject* HashMap::get(RedisimpleObject* key) {
     target_table = expand_table_.get();
     bucket = hash_val & expand_table_->size_mask_;
   }
-  auto result = target_table->find(bucket, key)->value_.get();
+  auto result = target_table->get_value(bucket, key);
   return result;
 }
 
@@ -164,7 +189,7 @@ int HashMap::exist(RedisimpleObject* key) {
     target_table = expand_table_.get();
     bucket = hash_val & expand_table_->size_mask_;
   }
-  auto& result = target_table->find(bucket, key);
+  auto result = target_table->get_value(bucket, key);
   check_load_factor();
   return result == nullptr ? 0 : 1;
 }
@@ -230,20 +255,18 @@ void HashMap::rehash() {
   int end_idx =
       std::min(Config::rehash_stride + rehash_index_, hash_table_->table_size_);
   for (; rehash_index_ < end_idx; ++rehash_index_) {
-    std::unique_ptr<TableEntry>* old_list =
-        hash_table_->table_.get() + rehash_index_;
-    // move all entry in hash table to expand table
-    //
-    while (*old_list != nullptr) {
-      std::unique_ptr<TableEntry> first_entry(old_list->release());
-      old_list->reset(first_entry->next_.release());
-      unsigned int new_bucket =
-          first_entry->key_->hash() & expand_table_->size_mask_;
-      std::unique_ptr<TableEntry>* new_list =
-          expand_table_->table_.get() + new_bucket;
-      // push first entry to the front of new bucket
-      first_entry.reset(new_list->release());
-      new_list->reset(first_entry.release());
+    // move entries from head to tail
+    TableEntry& head = hash_table_->table_[rehash_index_];
+    std::unique_ptr<TableEntry> p(head.next_.release());
+    // add first entry to expand table
+    int bucket = head.key_->hash() & expand_table_->size_mask_;
+    hash_table_->add_pair(bucket, head.key_, head.value_);
+    // add following entries to expand table
+    while (p != nullptr) {
+      std::unique_ptr<TableEntry> tmp(p->next_.release());
+      bucket = p->key_->hash() & expand_table_->size_mask_;
+      expand_table_->add_without_check(bucket, p);
+      p.reset(tmp.release());
     }
   }
   if (rehash_index_ == hash_table_->table_size_) {

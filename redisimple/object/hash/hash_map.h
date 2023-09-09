@@ -28,7 +28,6 @@ class HashTable {
                std::unique_ptr<RedisimpleObject>& value);
   int replace_pair(unsigned int bucket, std::unique_ptr<RedisimpleObject>& key,
                    std::unique_ptr<RedisimpleObject>& value);
-  TableEntry* get_random_pair();
   RedisimpleObject* get_value(unsigned int bucket, RedisimpleObject* key);
   int delete_pair(unsigned int bucket, RedisimpleObject* key);
   friend class HashMap;
@@ -42,11 +41,11 @@ class HashTable {
   // size mask look like '000....0111111', which has n '1';
   unsigned int size_mask_;
   // point to an array of TableEntry pointer
-  std::unique_ptr<std::unique_ptr<TableEntry>[]> table_;
-  // return pointer to the entry whose key match the target;
-  // if can not find target, return last pointer of slot.
-  std::unique_ptr<TableEntry>& find(unsigned int bucket,
-                                    RedisimpleObject* target);
+  std::unique_ptr<TableEntry[]> table_;
+  // move entry to the new bucket (used during rehash)
+  // this is faster than add;
+  // make sure the next of `entry` is nullptr
+  void add_without_check(int bucket, std::unique_ptr<TableEntry>& entry);
 };
 
 class HashMap : public HashObject {
