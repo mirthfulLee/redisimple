@@ -1,10 +1,10 @@
-#ifndef REDISIMPLE_OBJECT_STRUCTURE_INTEGER_H_
-#define REDISIMPLE_OBJECT_STRUCTURE_INTEGER_H_
+#ifndef REDISIMPLE_OBJECT_STRING_INTEGER_H_
+#define REDISIMPLE_OBJECT_STRING_INTEGER_H_
 
 #include "redisimple/object/redisimple_object.h"
-#include "redisimple_string.h"
+#include "string_object.h"
 namespace redisimple::object::structure {
-class Integer : public String {
+class Integer : public StringObject {
  public:
   Integer() : value_(0) {}
   Integer(int value) : value_(value) {}
@@ -32,4 +32,4 @@ class Integer : public String {
 int stoi(const char* str);
 int length_of_integer(int);
 }  // namespace redisimple::object::structure
-#endif  // REDISIMPLE_OBJECT_STRUCTURE_INTEGER_H_
+#endif  // REDISIMPLE_OBJECT_STRING_INTEGER_H_

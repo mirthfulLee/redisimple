@@ -6,8 +6,7 @@
 #include <memory>
 #include <stack>
 
-#include "redisimple/config.h"
-#include "redisimple/object/redisimple_object.h"
+#include "redisimple/log/error.h"
 #include "redisimple/util/hash.h"
 namespace redisimple::object::structure {
 
@@ -79,12 +78,22 @@ int SimpleDynamicString::serialize(char* out_buf, int& offset, int& cnt) {
 }
 
 // take one
-int deserialize(char* argv[], int& offset, int& argc) {}
+int SimpleDynamicString::deserialize(char* argv[], int& offset, int& argc) {
+  copy(argv[offset], strlen(argv[offset]));
+  ++offset;
+  return 1;
+}
 
-int set(const char*);
-int append(const char*);
-int increase_by(const char*);
-int decrease_by(const char*);
+int SimpleDynamicString::set(const char* str) {
+  copy(str, strlen(str));
+  return 1;
+}
+int SimpleDynamicString::append(const char* str) {
+  catenate(str, strlen(str));
+  return 1;
+}
+int increase_by(const char*) { return log::ERROR_NOT_DEFINED; }
+int decrease_by(const char*) { return log::ERROR_NOT_DEFINED; }
 
 void SimpleDynamicString::copy(const char* str, int str_length) {
   if (str_length == 0) {

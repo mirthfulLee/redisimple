@@ -1,14 +1,14 @@
-#ifndef REDISIMPLE_OBJECT_STRUCTURE_SIMPLE_DYNAMIC_STRING_H_
-#define REDISIMPLE_OBJECT_STRUCTURE_SIMPLE_DYNAMIC_STRING_H_
+#ifndef REDISIMPLE_OBJECT_STRING_SIMPLE_DYNAMIC_STRING_H_
+#define REDISIMPLE_OBJECT_STRING_SIMPLE_DYNAMIC_STRING_H_
 #include <cstring>
 #include <memory>
 
 #include "redisimple/config.h"
 #include "redisimple/object/redisimple_object.h"
-#include "redisimple_string.h"
+#include "string_object.h"
 namespace redisimple::object::structure {
 
-class SimpleDynamicString : public String {
+class SimpleDynamicString : public StringObject {
  public:
   SimpleDynamicString();
   // build SDS by copying data from str
@@ -58,4 +58,4 @@ class SimpleDynamicString : public String {
   std::unique_ptr<char[]> buf_;
 };
 }  // namespace redisimple::object::structure
-#endif  // REDISIMPLE_OBJECT_STRUCTURE_SIMPLE_DYNAMIC_STRING_H_
+#endif  // REDISIMPLE_OBJECT_STRING_SIMPLE_DYNAMIC_STRING_H_

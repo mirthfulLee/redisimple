@@ -1,10 +1,11 @@
-#ifndef REDISIMPLE_OBJECT_STRUCTURE_HASH_MAP_H_
-#define REDISIMPLE_OBJECT_STRUCTURE_HASH_MAP_H_
+#ifndef REDISIMPLE_OBJECT_HASH_HASH_MAP_H_
+#define REDISIMPLE_OBJECT_HASH_HASH_MAP_H_
 #include <cstring>
 #include <memory>
 
+#include "redisimple/object/hash/hash_object.h"
 #include "redisimple/object/redisimple_object.h"
-#include "redisimple_data_structure.h"
+
 namespace redisimple::object::structure {
 class TableEntry {
  public:
@@ -48,27 +49,26 @@ class HashTable {
                                     RedisimpleObject* target);
 };
 
-class HashMap : public RDS {
+class HashMap : public HashObject {
  public:
   HashMap();
   HashMap(int size);
-  int add_pair(std::unique_ptr<RedisimpleObject>& key,
-               std::unique_ptr<RedisimpleObject>& value);
-  // if the key is in map, replace the value
-  // else add the pair to map
-  int replace_pair(std::unique_ptr<RedisimpleObject>& key,
-                   std::unique_ptr<RedisimpleObject>& value);
-  TableEntry* get_random_pair();
-  RedisimpleObject* get_value(RedisimpleObject* key);
+
+ public:
+  RST structure_type();
+  int compare(RedisimpleObject* ro);
+  std::unique_ptr<RedisimpleObject> duplicate();
+  int size();
+  int hash();
+  int serialize(char* out_buf, int& offset, int& cnt);
+  int deserialize(char* argv[], int& offset, int& argc);
+
+ public:
+  RedisimpleObject* get(RedisimpleObject* key);
+  int set(std::unique_ptr<RedisimpleObject>& key,
+          std::unique_ptr<RedisimpleObject>& value);
+  int exist(RedisimpleObject* key);
   int delete_pair(RedisimpleObject* key);
-  void clear();
-  // compare for HashMap is not allowed
-  int compare(RDS*) { return 1; }
-  RedisimpleStructureType structure_type() { return REDISIMPLE_STRUCTURE_HASH; }
-  // duplicate is not supported for HashMap
-  std::unique_ptr<RDS> duplicate() { return nullptr; }
-  // hash is not support for HashMap
-  int hash() { return 0; }
 
  private:
   std::unique_ptr<HashTable> hash_table_;
@@ -80,6 +80,10 @@ class HashMap : public RDS {
   void check_load_factor();
   // create a new thread to handle rehash
   void rehash();
+  TableEntry* get_random_pair();
+  void clear();
+  int add_pair(std::unique_ptr<RedisimpleObject>& key,
+               std::unique_ptr<RedisimpleObject>& value);
 };
 }  // namespace redisimple::object::structure
-#endif  // REDISIMPLE_OBJECT_STRUCTURE_HASH_MAP_H_
+#endif  // REDISIMPLE_OBJECT_HASH_HASH_MAP_H_

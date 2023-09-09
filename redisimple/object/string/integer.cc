@@ -8,7 +8,6 @@
 #include "redisimple/log/error.h"
 #include "redisimple/object/redisimple_object.h"
 #include "redisimple/util/hash.h"
-#include "redisimple_string.h"
 #include "simple_dynamic_string.h"
 
 namespace redisimple::object::structure {

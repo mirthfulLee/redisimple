@@ -1,4 +1,4 @@
-#include "redisimple_string.h"
+#include "string_object.h"
 
 #include <cstring>
 #include <memory>
@@ -37,7 +37,7 @@ int length_of_integer(const char* str) {
   return digit_cnt;
 }
 
-String::String(const char* str) {
+StringObject::StringObject(const char* str) {
   int int_len = length_of_integer(str);
   if (int_len > 0) {
     data_.reset(new Integer(str));
@@ -46,14 +46,14 @@ String::String(const char* str) {
   }
 }
 
-ROT String::object_type() { return REDISIMPLE_OBJECT_STRING; }
+ROT StringObject::object_type() { return REDISIMPLE_OBJECT_STRING; }
 
-RST String::structure_type() { return data_->structure_type(); }
+RST StringObject::structure_type() { return data_->structure_type(); }
 
-int String::compare(RedisimpleObject* ro) {
+int StringObject::compare(RedisimpleObject* ro) {
   if (ro->object_type() == REDISIMPLE_OBJECT_STRING)
     return log::ERROR_WRONG_TYPE;
-  String* p = dynamic_cast<String*>(ro);
+  StringObject* p = dynamic_cast<StringObject*>(ro);
   if (data_->structure_type() == p->data_->structure_type())
     return data_->compare(p->data_.get());
   else if (data_->structure_type() == REDISIMPLE_STRUCTURE_INT)
@@ -63,23 +63,23 @@ int String::compare(RedisimpleObject* ro) {
     return -p->data_->compare(data_.get());
 }
 
-std::unique_ptr<RedisimpleObject> String::duplicate() {
+std::unique_ptr<RedisimpleObject> StringObject::duplicate() {
   return data_->duplicate();
 }
 
-int String::size() { return data_->size(); }
+int StringObject::size() { return data_->size(); }
 
-int String::hash() { return data_->hash(); }
+int StringObject::hash() { return data_->hash(); }
 
-int String::serialize(char* out_buf, int& offset, int& cnt) {
+int StringObject::serialize(char* out_buf, int& offset, int& cnt) {
   return data_->serialize(out_buf, offset, cnt);
 }
 
-int String::deserialize(char* argv[], int& offset, int& argc) {
+int StringObject::deserialize(char* argv[], int& offset, int& argc) {
   return data_->deserialize(argv, offset, argc);
 }
 
-int String::set(const char* str) {
+int StringObject::set(const char* str) {
   int int_len = length_of_integer(str);
   if (int_len > 0) {
     if (data_->structure_type() == REDISIMPLE_STRUCTURE_INT)
@@ -95,19 +95,23 @@ int String::set(const char* str) {
   return 1;
 }
 
-int String::append(const char* str) {
+int StringObject::append(const char* str) {
   // convert Integer to SDS whatever
   if (data_->structure_type() != REDISIMPLE_STRUCTURE_RAW)
     itos(strlen(str) + k_sds_max_int_digits);
   return data_->append(str);
 }
 
-int String::increase_by(const char* str) { return data_->increase_by(str); }
+int StringObject::increase_by(const char* str) {
+  return data_->increase_by(str);
+}
 
-int String::decrease_by(const char* str) { return data_->decrease_by(str); }
+int StringObject::decrease_by(const char* str) {
+  return data_->decrease_by(str);
+}
 
 // make sure data_ is Integer and str_len > len(data_)
-void String::itos(int str_len) {
+void StringObject::itos(int str_len) {
   int len = 0, tmp;
   std::unique_ptr<char[]> buf(new char[str_len + 1]);
   data_->serialize(buf.get(), len, tmp);
