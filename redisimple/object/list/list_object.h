@@ -6,7 +6,7 @@
 namespace redisimple::object {
 // Set includes multiple non-repeating member object
 // could add, get random member, delete target member etc.
-class SetObject : public RedisimpleObject {
+class ListObject : public RedisimpleObject {
  public:
   ROT object_type();
   virtual RST structure_type();
@@ -18,16 +18,18 @@ class SetObject : public RedisimpleObject {
   virtual int deserialize(char* argv[], int& offset, int& argc);
 
  public:
-  virtual int add(std::unique_ptr<RedisimpleObject>& object);
-  // return a random value in set;
-  virtual RedisimpleObject* random_value();
-  // pop a random value and delete it
-  virtual std::unique_ptr<RedisimpleObject> pop_value();
-  virtual int exist(RedisimpleObject*);
-  virtual int delete_target(RedisimpleObject*);
+  virtual int push_front(std::unique_ptr<RedisimpleObject>&);
+  virtual int push_back(std::unique_ptr<RedisimpleObject>&);
+  virtual int insert(int, std::unique_ptr<RedisimpleObject>&);
+  virtual std::unique_ptr<RedisimpleObject> pop_front();
+  virtual std::unique_ptr<RedisimpleObject> pop_back();
+  virtual int remove(RedisimpleObject*);
+  virtual int trim(int left, int right);
+  virtual int set(int, std::unique_ptr<RedisimpleObject>&);
+  virtual RedisimpleObject* at(int);
 
  private:
-  std::unique_ptr<SetObject> data_;
+  std::unique_ptr<ListObject> data_;
 };
 }  // namespace redisimple::object
 #endif  // REDISIMPLE_OBJECT_SET_SET_OBJECT_H_
