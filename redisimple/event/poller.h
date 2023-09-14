@@ -19,15 +19,10 @@ class Poller {
   virtual ~Poller() = 0;
 
  public:
-  virtual int add_listen_event(int fd) = 0;
-  // add new socket to poller
-  virtual int create_file_event(int fd, int mask) = 0;
+  virtual int add_file_event(int fd, int mask) = 0;
+  virtual int delete_file_event(int fd, int mask) = 0;
   // TODO: modify the defination of time event
   virtual int create_time_event() = 0;
-  // bind new event to fd
-  virtual int bind_event(int fd, int mask) = 0;
-  // untie the event binded to fd
-  virtual int untie_event(int fd, int mask) = 0;
   // iterate to next pair of ready fd & mask;
   // if all cached event have been processed,
   // poll to get next group ready events, then this function is blocked

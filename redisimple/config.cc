@@ -10,6 +10,7 @@ float Config::skiplist_p;
 unsigned int Config::skiplist_max_level;
 int Config::large_sds_size;
 int Config::more_free_space;
+int Config::event_list_size;
 Config *Config::instance_;
 Config *Config::get_instance() { return instance_; }
 void Config::load_config(char *config_file) {
@@ -21,5 +22,6 @@ void Config::load_config(char *config_file) {
   skiplist_max_level = 16;
   large_sds_size = 1024;
   more_free_space = 1024;
+  event_list_size = 10000;
 }
 }  // namespace redisimple

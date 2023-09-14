@@ -16,15 +16,10 @@ class EpollPoller : public Poller {
   EpollPoller();
 
  public:
-  // int add_listen_event(int fd);
-  // add new socket to poller
-  int create_file_event(int fd, int mask);
+  int add_file_event(int fd, int mask);
+  int delete_file_event(int fd, int mask);
   // TODO: modify the defination of time event
   int create_time_event();
-  // bind new event to fd
-  int bind_event(int fd, int mask);
-  // untie the event binded to fd
-  int untie_event(int fd, int mask);
   // iterate to next pair of ready fd & mask;
   // if all cached event have been processed,
   // poll to get next group ready events, then this function is blocked
