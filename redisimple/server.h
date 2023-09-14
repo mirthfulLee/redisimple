@@ -1,9 +1,11 @@
 #ifndef REDISIMPLE_SERVER_H_
 #define REDISIMPLE_SERVER_H_
+#include <map>
 #include <memory>
 
 #include "data_base.h"
 #include "redisimple/client.h"
+#include "redisimple/event/poller.h"
 namespace redisimple {
 class Server {
  public:
@@ -17,12 +19,16 @@ class Server {
   int start_main_loop();
 
  private:
+  int listen_fd_;
   std::unique_ptr<DataBaseList> db_list_;
-  std::unique_ptr<ClientList> client_list_;
-  // TODO: event listener
+  // map <fd, client>
+  std::map<int, Client> clients_;
+  // TODO: event poller
+  std::unique_ptr<event::Poller> poller_;
 
  private:
   int new_client();
+  int delete_client();
   int timer_event();
   int process_request(int fd);
   int output_result(int fd);

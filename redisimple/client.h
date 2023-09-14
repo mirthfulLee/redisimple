@@ -13,11 +13,12 @@ class Client {
   Client(int fd, int flag = 0);
 
  public:
+  // param-mask means the status of socket
   // read data from socket
   // get argv & argc (tokenize in_buffer)
   // chose handler with argv[0]
   // execute handler
-  int execute();
+  int execute(int mask);
 
  private:
   int fd_;
