@@ -1,6 +1,7 @@
 #ifndef REDISIMPLE_EVENT_POLLER_H_
 #define REDISIMPLE_EVENT_POLLER_H_
 
+#include <memory>
 #include <utility>
 namespace redisimple::event {
 
@@ -27,6 +28,10 @@ class Poller {
   // if all cached event have been processed,
   // poll to get next group ready events, then this function is blocked
   virtual std::pair<int, int> next_ready_event() = 0;
+
+ protected:
+  std::unique_ptr<int[]> mask_;
+  int event_limit_;
 };
 }  // namespace redisimple::event
 #endif  // REDISIMPLE_EVENT_POLLER_H_

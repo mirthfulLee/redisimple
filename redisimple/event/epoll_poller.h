@@ -27,7 +27,14 @@ class EpollPoller : public Poller {
 
  private:
   int epfd_;
-  std::unique_ptr<struct epoll_event[]> events_;
+  std::unique_ptr<struct epoll_event[]> epoll_events_;
+  // the total number of ready events
+  int event_num_;
+  int processed_event_num_;
+
+ private:
+  int epoll_event_to_mask(int event);
+  int mask_to_epoll_event(int mask);
 };
 }  // namespace redisimple::event
 #endif  // REDISIMPLE_EVENT_EPOLL_POLLER_H_
