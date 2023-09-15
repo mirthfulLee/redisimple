@@ -58,9 +58,10 @@ std::pair<int, int> EpollPoller::next_ready_event() {
 
 int EpollPoller::epoll_event_to_mask(int event) {}
 int mask_to_epoll_event(int mask) {
+  // redisimple only has one process(thread), so oneshot is not necessary
   int event = 0;
-  // FIXME: ONESHOT? ET?
-  if (mask & EVENT_READABLE) event |= EPOLLIN;
+  // TODO: use ET mode to improve performance
+  if (mask & EVENT_READABLE) event |= EPOLLIN | EPOLLET;
   if (mask & EVENT_WRITABLE) event |= EPOLLOUT;
   if (mask & EVENT_CLOSE) event |= EPOLLRDHUP | EPOLLHUP | EPOLLERR;
   return event;

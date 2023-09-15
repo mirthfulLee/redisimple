@@ -9,8 +9,9 @@
 namespace redisimple {
 class Server {
  public:
-  int load_config();
+  Server();
 
+ public:
   int listen_init();
   // accept new connection(client);
   // deal with timer event;
@@ -22,16 +23,13 @@ class Server {
   int listen_fd_;
   std::unique_ptr<DataBaseList> db_list_;
   // map <fd, client>
-  std::map<int, Client> clients_;
+  std::unique_ptr<ClientList> client_list_;
   // TODO: event poller
-  std::unique_ptr<event::Poller> poller_;
+  event::Poller* poller_;
 
  private:
-  int new_client();
-  int delete_client();
+  int accept_new_client();
   int timer_event();
-  int process_request(int fd);
-  int output_result(int fd);
 };
 }  // namespace redisimple
 #endif  // REDISIMPLE_SERVER_H_

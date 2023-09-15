@@ -15,6 +15,7 @@ class Config {
   static int large_sds_size;
   static int more_free_space;
   static int event_list_size;
+  static int redisimple_port;
   Config(Config &other) = delete;
   void operator=(Config &) = delete;
   static Config *get_instance();

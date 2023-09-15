@@ -18,7 +18,9 @@ class Client {
   // get argv & argc (tokenize in_buffer)
   // chose handler with argv[0]
   // execute handler
-  int execute(int mask);
+  int read_and_execute(int mask);
+  int write();
+  int fd_matched(int fd);
 
  private:
   int fd_;
@@ -43,13 +45,14 @@ class ClientList {
   ClientList();
 
  public:
-  int add_client(int fd, int flag);
+  int add_client(std::unique_ptr<Client>& new_client);
   int delete_client_with_fd(int fd);
-  int delete_expired_client();
-  int get_client_with_fd(int fd);
+  // int delete_expired_client();
+  Client* get_client_with_fd(int fd);
 
  private:
   std::unique_ptr<ClientNode> head_;
+  ClientNode* tail_;
   int client_num_;
 };
 }  // namespace redisimple
