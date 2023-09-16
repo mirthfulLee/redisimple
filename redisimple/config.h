@@ -12,10 +12,11 @@ class Config {
   // the possibility for skiplist node to get higher level
   static float skiplist_p;
   static unsigned int skiplist_max_level;
-  static int large_sds_size;
-  static int more_free_space;
-  static int event_list_size;
-  static int redisimple_port;
+  static unsigned int large_sds_size;
+  static unsigned int more_free_space;
+  static unsigned int event_list_size;
+  static unsigned int redisimple_port;
+  static unsigned int buffer_size;
   Config(Config &other) = delete;
   void operator=(Config &) = delete;
   static Config *get_instance();

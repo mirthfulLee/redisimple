@@ -1,9 +1,48 @@
 #include "client.h"
 
+#include <sys/socket.h>
+#include <sys/types.h>
+
 #include <cstddef>
 #include <memory>
 
+#include "config.h"
 namespace redisimple {
+Client::Client(int fd, int flag)
+    : fd_(fd), flags_(flag), authentecated_(false) {
+  // TODO: init expire time
+  buffer_size_ = Config::buffer_size;
+  in_buffer_.reset(new char[buffer_size_]);
+  out_buffer_.reset(new char[buffer_size_]);
+  argv_.reset(new char*[256]);
+  in_index_ = 0;
+  out_index_ = 0;
+}
+// read request from socket buffer (in kernel) to in_buffer_ gradually
+int Client::read_and_execute() {
+  // read request with recv
+  ssize_t retval = 1;
+  int step_size = 64;
+  while (retval > 0) {
+    // FIXME: set MSG_DONTWAIT flag or not?
+    retval = recv(fd_, in_buffer_.get() + in_index_, step_size, MSG_DONTWAIT);
+    in_index_ += retval;
+  }
+
+  // resolve request
+
+  // exeute request
+
+  return 0;
+}
+int Client::write() {
+  while (out_index_) {
+    int retval = send(fd_, out_buffer_.get(), out_index_, MSG_DONTWAIT);
+    out_index_ -= retval;
+  }
+  return 0;
+}
+int Client::fd_matched(int fd) { return fd == fd_; }
 
 int ClientList::add_client(std::unique_ptr<Client>& new_client) {
   std::unique_ptr<ClientNode> new_node(new ClientNode(new_client));

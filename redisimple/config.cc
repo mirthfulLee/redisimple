@@ -8,10 +8,11 @@ unsigned int Config::rehash_stride;
 // the possibility for skiplist node to get higher level
 float Config::skiplist_p;
 unsigned int Config::skiplist_max_level;
-int Config::large_sds_size;
-int Config::more_free_space;
-int Config::event_list_size;
-int redisimple_port;
+unsigned int Config::large_sds_size;
+unsigned int Config::more_free_space;
+unsigned int Config::event_list_size;
+unsigned int redisimple_port;
+unsigned int buffer_size;
 Config *Config::instance_;
 Config *Config::get_instance() { return instance_; }
 void Config::load_config(char *config_file) {
@@ -25,5 +26,6 @@ void Config::load_config(char *config_file) {
   more_free_space = 1024;
   event_list_size = 10000;
   redisimple_port = 65432;
+  buffer_size = 4096;
 }
 }  // namespace redisimple

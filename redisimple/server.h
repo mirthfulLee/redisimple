@@ -21,7 +21,7 @@ class Server {
 
  private:
   int listen_fd_;
-  std::unique_ptr<DataBaseList> db_list_;
+  DataBaseList* db_list_;
   // map <fd, client>
   std::unique_ptr<ClientList> client_list_;
   // TODO: event poller

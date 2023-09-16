@@ -30,9 +30,10 @@ class DataBase : public HashObject {
   // TODO: expire function
 };
 typedef LinkedListNode<DataBase> DBNode;
+// DataBaseList adopt singleton design pattern
 class DataBaseList {
  public:
-  DataBaseList();
+  static DataBaseList* get_db_list_ref();
 
  public:
   DataBase* get_db_with_name(StringObject* name);
@@ -42,8 +43,13 @@ class DataBaseList {
   int add_db(std::unique_ptr<DataBase> db);
 
  private:
+  static std::unique_ptr<DataBaseList> instance_;
   std::unique_ptr<DBNode> head_;
+  DBNode* tail_;
   int db_num_;
+
+ private:
+  DataBaseList();
 };
 }  // namespace redisimple
 #endif  // REDISIMPLE_DATA_BASE_H_

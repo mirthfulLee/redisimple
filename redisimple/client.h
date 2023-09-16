@@ -18,7 +18,7 @@ class Client {
   // get argv & argc (tokenize in_buffer)
   // chose handler with argv[0]
   // execute handler
-  int read_and_execute(int mask);
+  int read_and_execute();
   int write();
   int fd_matched(int fd);
 
@@ -28,10 +28,15 @@ class Client {
   bool authentecated_;
   int expire_time_;
   int flags_;
+  unsigned int buffer_size_;
+  // [0, in_index_) in in_buffer_ has been used for socket read
+  unsigned int in_index_;
+  // [0, out_index_) in out_buffer has been used for socket write
+  unsigned int out_index_;
   std::unique_ptr<char[]> in_buffer_;
   std::unique_ptr<char[]> out_buffer_;
-  std::unique_ptr<char*[]> argv;
-  int argc;
+  std::unique_ptr<char*[]> argv_;
+  int argc_;
   // TODO: processor
  private:
   int read_data();

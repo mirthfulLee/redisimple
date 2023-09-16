@@ -11,11 +11,13 @@
 #include "config.h"
 #include "event/epoll_poller.h"
 #include "redisimple/client.h"
+#include "redisimple/data_base.h"
 #include "redisimple/event/poller.h"
 
 namespace redisimple {
-Server::Server() : db_list_(nullptr), client_list_(nullptr) {
+Server::Server() : client_list_(nullptr) {
   poller_->get_poller_instance();
+  db_list_ = DataBaseList::get_db_list_ref();
 }
 
 int Server::listen_init() {
