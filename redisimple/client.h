@@ -3,7 +3,8 @@
 #include <memory>
 
 #include "redisimple/data_base.h"
-#include "redisimple/object/list/linked_list.h"
+#include "redisimple/object/hash/hash_object.h"
+#include "redisimple/object/list/list_object.h"
 namespace redisimple {
 
 // Each client link to an socket that linked to socket server
@@ -35,14 +36,14 @@ class Client {
   unsigned int out_index_;
   std::unique_ptr<char[]> in_buffer_;
   std::unique_ptr<char[]> out_buffer_;
-  std::unique_ptr<char*[]> argv_;
-  int argc_;
   // TODO: processor
  private:
   int read_data();
   int input_resolve();
   int chose_processor();
   int start_process();
+  // resolve request in in_buffer_ to argv & argc
+  int resolve_request();
 };
 typedef LinkedListNode<Client> ClientNode;
 class ClientList {

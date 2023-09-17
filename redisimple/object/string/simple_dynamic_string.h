@@ -13,6 +13,7 @@ class SimpleDynamicString : public StringObject {
   SimpleDynamicString();
   // build SDS by copying data from str
   SimpleDynamicString(const char* str);
+  SimpleDynamicString(const char* str, int len);
   // copy constructor
   SimpleDynamicString(const SimpleDynamicString& sds);
   SimpleDynamicString(std::unique_ptr<char[]>& str, int len, int free);

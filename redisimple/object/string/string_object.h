@@ -11,6 +11,8 @@ class StringObject : public RedisimpleObject {
  public:
   StringObject();
   StringObject(const char*);
+  StringObject(const char*, int len);
+  StringObject(const int);
 
  public:
   ROT object_type();

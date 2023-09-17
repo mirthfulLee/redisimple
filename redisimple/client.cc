@@ -7,6 +7,8 @@
 #include <memory>
 
 #include "config.h"
+#include "redisimple/object/hash/hash_object.h"
+#include "redisimple/util/protocol.h"
 namespace redisimple {
 Client::Client(int fd, int flag)
     : fd_(fd), flags_(flag), authentecated_(false) {
@@ -14,7 +16,6 @@ Client::Client(int fd, int flag)
   buffer_size_ = Config::buffer_size;
   in_buffer_.reset(new char[buffer_size_]);
   out_buffer_.reset(new char[buffer_size_]);
-  argv_.reset(new char*[256]);
   in_index_ = 0;
   out_index_ = 0;
 }
@@ -30,8 +31,20 @@ int Client::read_and_execute() {
   }
 
   // resolve request
+  int offset;
+  std::unique_ptr<object::ListObject> request =
+      util::resolve_list(in_buffer_.get(), offset);
+  if (offset != in_index_) {
+    // move unused data to the front of input buffer
+    for (int i = 0; i + offset < in_index_; ++i) {
+      in_buffer_[i] = in_buffer_[offset + i];
+    }
+  }
+  in_index_ -= offset;
 
   // exeute request
+
+  // deserialize result to out_buffer_
 
   return 0;
 }

@@ -17,6 +17,11 @@ SimpleDynamicString::SimpleDynamicString(const char* str)
   copy(str, strlen(str));
 }
 
+SimpleDynamicString::SimpleDynamicString(const char* str, int len)
+    : len_(len), free_(0), buf_(new char[len + 1]) {
+  copy(str, len);
+}
+
 SimpleDynamicString::SimpleDynamicString(const SimpleDynamicString& sds)
     : len_(0), free_(0), buf_(nullptr) {
   copy(sds.buf_.get(), sds.len_);

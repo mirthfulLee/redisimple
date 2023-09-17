@@ -46,6 +46,12 @@ StringObject::StringObject(const char* str) {
   }
 }
 
+StringObject::StringObject(const char* str, int len) {
+  data_.reset(new SimpleDynamicString(str, len));
+}
+
+StringObject::StringObject(const int value) { data_.reset(new Integer(value)); }
+
 ROT StringObject::object_type() { return REDISIMPLE_OBJECT_STRING; }
 
 RST StringObject::structure_type() { return data_->structure_type(); }

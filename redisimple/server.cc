@@ -54,7 +54,7 @@ int Server::start_main_loop() {
       accept_new_client();
     } else if (event.second & event::EVENT_READABLE) {
       Client* client = client_list_->get_client_with_fd(event.first);
-      client->read_and_execute(event.second);
+      client->read_and_execute();
     } else if (event.second & event::EVENT_WRITABLE) {
       Client* client = client_list_->get_client_with_fd(event.first);
       client->write();
