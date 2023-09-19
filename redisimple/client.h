@@ -5,10 +5,14 @@
 #include "redisimple/data_base.h"
 #include "redisimple/object/hash/hash_object.h"
 #include "redisimple/object/list/list_object.h"
+#include "redisimple/object/redisimple_object.h"
 namespace redisimple {
-
+// ! must define such a uncompleted class,
+// ! otherwise will result in recursive include
+namespace handler {
+class RequestHandler;
+}
 // Each client link to an socket that linked to socket server
-
 class Client {
  public:
   Client(int fd, int flag = 0);
@@ -36,14 +40,16 @@ class Client {
   unsigned int out_index_;
   std::unique_ptr<char[]> in_buffer_;
   std::unique_ptr<char[]> out_buffer_;
+  std::unique_ptr<object::ListObject> request_;
+  std::unique_ptr<RedisimpleObject> result_;
+  handler::RequestHandler* handler_;
+  friend class handler::RequestHandler;
+
   // TODO: processor
  private:
   int read_data();
-  int input_resolve();
-  int chose_processor();
-  int start_process();
-  // resolve request in in_buffer_ to argv & argc
   int resolve_request();
+  int serialize_result();
 };
 typedef LinkedListNode<Client> ClientNode;
 class ClientList {

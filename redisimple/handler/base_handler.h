@@ -1,33 +1,33 @@
 #ifndef REDISIMPLE_HANDLER_BASE_HANDLER_H_
 #define REDISIMPLE_HANDLER_BASE_HANDLER_H_
+#include <map>
 #include <memory>
 
 #include "redisimple/client.h"
 #include "redisimple/data_base.h"
+#include "redisimple/object/list/list_object.h"
 #include "redisimple/object/redisimple_object.h"
+#include "redisimple/object/string/string_object.h"
 namespace redisimple::handler {
+typedef int (*handle_func)(Client* client);
 // the interface of request execution
 // take request and diliver it to corresponding concrete handler
-class BaseHandler {
+class RequestHandler {
  public:
-  std::unique_ptr<object::RedisimpleObject> execute_request(
-      std::unique_ptr<object::RedisimpleObject>& request, Client* client);
-  static BaseHandler* load_handler();
+  virtual int execute_request(Client* client);
+  static RequestHandler* load_handler();
 
  private:
-  BaseHandler();
-  // instance of base handler that would
-  static std::unique_ptr<BaseHandler> handler_;
-  // handles requests that could change the stage of client;
-  std::unique_ptr<BaseHandler> client_handler_;
-  // handles requests that operates string objects
-  std::unique_ptr<BaseHandler> string_handler_;
-  // handles requests that operates list objects
-  std::unique_ptr<BaseHandler> list_handler_;
-  // handles requests that operates map objects
-  std::unique_ptr<BaseHandler> map_handler_;
-  // handles requests that operates set objects
-  std::unique_ptr<BaseHandler> set_handler_;
+  RequestHandler();
+  static std::map<StringObject, handle_func> request_handler_map_;
+  // instance of base handler
+  static std::unique_ptr<RequestHandler> handler_;
+  static int string_set(Client* client);
+  static int string_get(Client* client);
+  static int string_append(Client* client);
+  static int string_incrby(Client* client);
+  static int string_decrby(Client* client);
+  static int string_strlen(Client* client);
 };
 
 }  // namespace redisimple::handler

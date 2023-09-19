@@ -116,6 +116,10 @@ int StringObject::decrease_by(const char* str) {
   return data_->decrease_by(str);
 }
 
+bool StringObject::operator<(const StringObject& b) {
+  return compare((RedisimpleObject*)&b) < 0 ? true : false;
+}
+
 // make sure data_ is Integer and str_len > len(data_)
 void StringObject::itos(int str_len) {
   int len = 0, tmp;

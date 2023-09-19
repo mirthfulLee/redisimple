@@ -29,6 +29,7 @@ class StringObject : public RedisimpleObject {
   virtual int append(const char*);
   virtual int increase_by(const char*);
   virtual int decrease_by(const char*);
+  bool operator<(const StringObject& b);
 
  private:
   std::unique_ptr<StringObject> data_;

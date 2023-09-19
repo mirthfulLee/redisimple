@@ -21,28 +21,9 @@ Client::Client(int fd, int flag)
 }
 // read request from socket buffer (in kernel) to in_buffer_ gradually
 int Client::read_and_execute() {
-  // read request with recv
-  ssize_t retval = 1;
-  int step_size = 64;
-  while (retval > 0) {
-    // FIXME: set MSG_DONTWAIT flag or not?
-    retval = recv(fd_, in_buffer_.get() + in_index_, step_size, MSG_DONTWAIT);
-    in_index_ += retval;
-  }
-
-  // resolve request
-  int offset;
-  std::unique_ptr<object::ListObject> request =
-      util::resolve_list(in_buffer_.get(), offset);
-  if (offset != in_index_) {
-    // move unused data to the front of input buffer
-    for (int i = 0; i + offset < in_index_; ++i) {
-      in_buffer_[i] = in_buffer_[offset + i];
-    }
-  }
-  in_index_ -= offset;
-
-  // exeute request
+  read_data();
+  resolve_request();
+  // handle request
 
   // deserialize result to out_buffer_
 
@@ -56,6 +37,32 @@ int Client::write() {
   return 0;
 }
 int Client::fd_matched(int fd) { return fd == fd_; }
+
+// read request with recv
+int Client::read_data() {
+  ssize_t retval = 1;
+  int step_size = 64;
+  while (retval > 0) {
+    // FIXME: set MSG_DONTWAIT flag or not?
+    retval = recv(fd_, in_buffer_.get() + in_index_, step_size, MSG_DONTWAIT);
+    in_index_ += retval;
+  }
+  return 0;
+}
+
+int Client::resolve_request() {
+  int offset = 0;
+  // TODO: operation case insensitive
+  request_.reset(util::resolve_list(in_buffer_.get(), offset).release());
+  if (offset != in_index_) {
+    // move unused data to the front of input buffer
+    for (int i = 0; i + offset < in_index_; ++i) {
+      in_buffer_[i] = in_buffer_[offset + i];
+    }
+  }
+  in_index_ -= offset;
+  return 0;
+}
 
 int ClientList::add_client(std::unique_ptr<Client>& new_client) {
   std::unique_ptr<ClientNode> new_node(new ClientNode(new_client));
